@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+:root {
+  --background: #e7edf6;
+  --foreground: #132033;
+  --panel: #ffffff;
+  --panel-dark: #0f172a;
+  --line: #d9e2ef;
+  --muted: #5f7189;
+  --accent: #0f6bff;
+  --accent-soft: #dbe8ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(15, 107, 255, 0.14), transparent 30%),
+    linear-gradient(180deg, #eef4fb 0%, #e7edf6 100%);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-frame {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
+  padding: 24px;
+}
+
+.panel-dark {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 30%),
+    linear-gradient(180deg, #0f172a 0%, #111f38 100%);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.28);
+}
+
+.eyebrow,
+.eyebrow-dark {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  color: #4c7399;
+}
+
+.eyebrow-dark {
+  color: #91c7ff;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  padding: 13px 15px;
+  color: var(--foreground);
+  outline: none;
+}
+
+.field:focus {
+  border-color: #93b7ff;
+  box-shadow: 0 0 0 4px rgba(15, 107, 255, 0.12);
+}
+
+.button-primary,
+.button-secondary,
+.button-secondary-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 180ms ease;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #0f6bff, #0ea5e9);
+  color: white;
+}
+
+.button-primary:hover {
+  filter: brightness(1.03);
+}
+
+.button-secondary {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--foreground);
+}
+
+.button-secondary-dark {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+@media (max-width: 1080px) {
+  .app-frame {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-frame {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .panel,
+  .panel-dark {
+    border-radius: 24px;
+    padding: 18px;
+  }
+}

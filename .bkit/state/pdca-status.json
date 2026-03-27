@@ -1,0 +1,183 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-03-27T01:33:58.004Z",
+  "activeFeatures": [
+    "web",
+    "permits",
+    "dashboard",
+    "new",
+    "[id]",
+    "upload"
+  ],
+  "primaryFeature": "web",
+  "features": {
+    "web": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:26:49.355Z",
+        "lastUpdated": "2026-03-27T01:33:48.315Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\components\\excel-upload-client.tsx"
+    },
+    "permits": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:27:27.592Z",
+        "lastUpdated": "2026-03-27T01:27:27.592Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\page.tsx"
+    },
+    "dashboard": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:27:40.767Z",
+        "lastUpdated": "2026-03-27T01:27:40.767Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\dashboard\\page.tsx"
+    },
+    "new": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:28:27.640Z",
+        "lastUpdated": "2026-03-27T01:28:49.735Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\new\\page.tsx"
+    },
+    "[id]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:29:03.132Z",
+        "lastUpdated": "2026-03-27T01:29:29.285Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\[id]\\page.tsx"
+    },
+    "upload": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T01:33:17.623Z",
+        "lastUpdated": "2026-03-27T01:33:58.004Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\upload\\page.tsx"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Dynamic",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-03-27T01:12:32.946Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-03-27T01:33:58.004Z"
+  },
+  "history": [
+    {
+      "timestamp": "2026-03-27T01:26:49.355Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:27:00.803Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:27:19.908Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:27:27.592Z",
+      "feature": "permits",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:27:40.767Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:28:11.224Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:28:27.640Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:28:49.735Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:29:03.132Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:29:29.285Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:33:17.623Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:33:48.315Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T01:33:58.004Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}
