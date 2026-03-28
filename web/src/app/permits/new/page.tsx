@@ -1,7 +1,7 @@
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import {
   permitCategories,
@@ -16,7 +16,7 @@ type PageProps = {
 
 export default async function NewPermitPage({ searchParams }: PageProps) {
   const envReady = hasSupabaseEnv();
-  const user = await requireUser();
+  const user = await getOptionalUser();
   const params = (await searchParams) ?? {};
   const error = typeof params.error === "string" ? params.error : null;
 

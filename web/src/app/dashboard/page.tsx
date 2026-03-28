@@ -3,12 +3,12 @@ import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
 import { hasSupabaseEnv } from "@/lib/env";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser } from "@/lib/auth";
 import { getPermitStats, getPermits } from "@/lib/permits";
 
 export default async function DashboardPage() {
   const envReady = hasSupabaseEnv();
-  const user = await requireUser();
+  const user = await getOptionalUser();
 
   const [stats, recentPermits] = await Promise.all([
     getPermitStats(),

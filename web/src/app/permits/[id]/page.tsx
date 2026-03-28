@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getPermit, getPermitHistory } from "@/lib/permits";
 import { permitStatuses } from "@/lib/mock-data";
@@ -24,7 +24,7 @@ const statusTone: Record<string, string> = {
 export default async function PermitDetailPage({ params }: PageProps) {
   const { id } = await params;
   const envReady = hasSupabaseEnv();
-  const user = await requireUser();
+  const user = await getOptionalUser();
 
   const [permit, history] = await Promise.all([
     getPermit(id),

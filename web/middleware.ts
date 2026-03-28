@@ -44,13 +44,6 @@ export async function middleware(request: NextRequest) {
   );
   const isAuthPage = authPages.includes(pathname);
 
-  if (isProtected && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
   if (isAuthPage && user) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";

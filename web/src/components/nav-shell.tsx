@@ -32,12 +32,13 @@ export function NavShell({ pathname }: { pathname: string }) {
             <Link
               key={item.href}
               href={item.href}
-              className={clsx(
-                "rounded-2xl px-4 py-3 text-sm font-medium transition",
-                active
-                  ? "bg-sky-500/20 text-white ring-1 ring-sky-300/30"
-                  : "bg-white/4 text-slate-300 hover:bg-white/8 hover:text-white",
-              )}
+              className="rounded-2xl px-4 py-3 text-base font-semibold transition"
+              style={{
+                color: "#ffffff",
+                background: active
+                  ? "rgba(14, 165, 233, 0.35)"
+                  : "rgba(255, 255, 255, 0.12)",
+              }}
             >
               {item.label}
             </Link>
@@ -45,7 +46,7 @@ export function NavShell({ pathname }: { pathname: string }) {
         })}
       </nav>
 
-      <div className="mt-auto rounded-3xl border border-white/8 bg-white/4 p-4">
+      <div className="mt-auto rounded-3xl border border-white/20 bg-white/10 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
           인증 방향
         </p>

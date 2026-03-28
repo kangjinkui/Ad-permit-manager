@@ -1,13 +1,13 @@
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
-import { requireUser } from "@/lib/auth";
+import { getOptionalUser } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { ExcelUploadClient } from "@/components/excel-upload-client";
 
 export default async function UploadPage() {
   const envReady = hasSupabaseEnv();
-  const user = await requireUser();
+  const user = await getOptionalUser();
 
   return (
     <main className="app-frame">
