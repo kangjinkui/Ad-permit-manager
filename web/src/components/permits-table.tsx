@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPermits, type PermitFilters } from "@/lib/permits";
+import { getPermits, getStaffList, type PermitFilters } from "@/lib/permits";
 import { PermitsFilter } from "@/components/permits-filter";
 
 const statusTone: Record<string, string> = {
@@ -17,7 +17,10 @@ type Props = {
 };
 
 export async function PermitsTable({ searchParams = {} }: Props) {
-  const permits = await getPermits(searchParams);
+  const [permits, staffList] = await Promise.all([
+    getPermits(searchParams),
+    getStaffList(),
+  ]);
 
   return (
     <div className="panel">
@@ -40,7 +43,7 @@ export async function PermitsTable({ searchParams = {} }: Props) {
       </div>
 
       <div className="mt-6">
-        <PermitsFilter defaultValues={searchParams} />
+        <PermitsFilter defaultValues={searchParams} staffList={staffList} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200">
@@ -52,13 +55,14 @@ export async function PermitsTable({ searchParams = {} }: Props) {
               <th className="px-4 py-3 font-medium">종류/구분</th>
               <th className="px-4 py-3 font-medium">상태</th>
               <th className="px-4 py-3 font-medium">안전점검</th>
+              <th className="px-4 py-3 font-medium">담당자</th>
               <th className="px-4 py-3 font-medium">원본</th>
             </tr>
           </thead>
           <tbody>
             {permits.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-400">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
                   조건에 맞는 항목이 없습니다.
                 </td>
               </tr>
@@ -87,6 +91,7 @@ export async function PermitsTable({ searchParams = {} }: Props) {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">{item.safetyCheck}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{item.staffName ?? "-"}</td>
                   <td className="px-4 py-4 text-sm text-slate-700">{item.sourceType}</td>
                 </tr>
               ))

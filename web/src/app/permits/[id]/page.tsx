@@ -7,6 +7,7 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { getPermit, getPermitHistory } from "@/lib/permits";
 import { permitStatuses } from "@/lib/mock-data";
 import { updateStatus } from "./actions";
+import { DeleteButton } from "./delete-button";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -92,6 +93,15 @@ export default async function PermitDetailPage({ params }: PageProps) {
               </div>
             ))}
           </dl>
+        </article>
+
+        {/* 삭제 */}
+        <article className="panel flex items-center justify-between gap-4">
+          <div>
+            <p className="eyebrow">Danger Zone</p>
+            <p className="mt-2 text-sm text-slate-600">이 항목을 삭제하면 이력을 포함한 모든 데이터가 영구 삭제됩니다.</p>
+          </div>
+          <DeleteButton permitId={permit.id} advertiser={permit.advertiser} />
         </article>
 
         {/* 상태 변경 */}

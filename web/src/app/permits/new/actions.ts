@@ -17,7 +17,7 @@ async function generateRecordNo(
 
   const { count } = await supabase
     .from("permit_records")
-    .select("id", { count: "exact", head: true })
+    .select("record_no", { count: "exact", head: true })
     .like("record_no", `${prefix}%`);
 
   return `${prefix}${padded((count ?? 0) + 1)}`;

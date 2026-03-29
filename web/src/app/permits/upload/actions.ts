@@ -19,20 +19,6 @@ export type UploadRow = {
   renewalTarget: string;
 };
 
-async function generateNextId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  index: number,
-): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `PM-${year}-`;
-  const { count } = await supabase
-    .from("permit_records")
-    .select("id", { count: "exact", head: true })
-    .like("id", `${prefix}%`);
-  const base = (count ?? 0) + index + 1;
-  return `${prefix}${String(base).padStart(3, "0")}`;
-}
-
 export async function bulkCreatePermits(rows: UploadRow[]) {
   const user = await requireUser();
   if (!user) redirect("/login");
@@ -42,12 +28,25 @@ export async function bulkCreatePermits(rows: UploadRow[]) {
   const supabase = await createClient();
   const errors: string[] = [];
 
+  // 현재 연도의 최대 번호를 한 번만 조회
+  const year = new Date().getFullYear();
+  const prefix = `PM-${year}-`;
+  const { data: existingNos } = await supabase
+    .from("permit_records")
+    .select("record_no")
+    .like("record_no", `${prefix}%`);
+
+  const maxNo = (existingNos ?? []).reduce((max, r) => {
+    const n = parseInt((r.record_no as string).replace(prefix, ""), 10);
+    return isNaN(n) ? max : Math.max(max, n);
+  }, 0);
+
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const id = await generateNextId(supabase, i);
+    const recordNo = `${prefix}${String(maxNo + i + 1).padStart(3, "0")}`;
 
     const { error } = await supabase.from("permit_records").insert({
-      id,
+      record_no: recordNo,
       kind: row.kind,
       category: row.category,
       advertiser: row.advertiser,
@@ -67,7 +66,7 @@ export async function bulkCreatePermits(rows: UploadRow[]) {
       errors.push(`행 ${i + 1} (${row.advertiser}): ${error.message}`);
     } else {
       await supabase.from("permit_status_history").insert({
-        permit_id: id,
+        permit_no: recordNo,
         from_status: null,
         to_status: row.status,
         changed_by: user.id,

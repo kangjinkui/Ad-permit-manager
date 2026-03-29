@@ -1,6 +1,7 @@
 "use client";
 
 import { permitKinds, permitStatuses, permitCategories } from "@/lib/mock-data";
+import type { StaffOption } from "@/lib/permits";
 
 type Props = {
   defaultValues?: {
@@ -8,12 +9,14 @@ type Props = {
     status?: string;
     kind?: string;
     category?: string;
+    staffName?: string;
   };
+  staffList?: StaffOption[];
 };
 
-export function PermitsFilter({ defaultValues = {} }: Props) {
+export function PermitsFilter({ defaultValues = {}, staffList = [] }: Props) {
   return (
-    <form method="GET" className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+    <form method="GET" className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
       <input
         name="q"
         defaultValue={defaultValues.q ?? ""}
@@ -44,7 +47,15 @@ export function PermitsFilter({ defaultValues = {} }: Props) {
           </option>
         ))}
       </select>
-      <button type="submit" className="button-primary md:col-span-2 xl:col-span-5">
+      <select name="staffName" defaultValue={defaultValues.staffName ?? ""} className="field">
+        <option value="">전체 담당자</option>
+        {staffList.map((s) => (
+          <option key={s.id} value={s.name}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+      <button type="submit" className="button-primary md:col-span-2 xl:col-span-6">
         검색
       </button>
     </form>

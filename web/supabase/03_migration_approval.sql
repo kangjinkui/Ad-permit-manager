@@ -147,5 +147,5 @@ create policy "active users can insert activity logs"
 
 -- 7. 최초 슈퍼유저 설정 (이메일 주소를 실제 값으로 변경 후 실행)
 -- update public.profiles
--- set role = 'admin', status = 'active'
+-- set role = 'admin', status = 'active', name = '강진규'
 -- where email = 'superuser@example.com';

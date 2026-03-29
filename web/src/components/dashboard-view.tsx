@@ -26,27 +26,12 @@ export function DashboardView({ stats, recentPermits }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="panel grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+      <section className="panel">
         <div>
           <p className="eyebrow">Server-first Dashboard</p>
           <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-950">
             담당자가 로그인하면 허가·신고 현황을 한 화면에서 확인합니다.
           </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-            KPI, 최근 변경건, 예정 심의 목록을 서버 컴포넌트에서 병렬 조회합니다.
-          </p>
-        </div>
-
-        <div className="rounded-[30px] border border-slate-200 bg-slate-950 p-5 text-slate-50">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            운영 원칙
-          </p>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
-            <li>사내 이메일 매직링크 로그인</li>
-            <li>초기 엑셀 일괄 업로드</li>
-            <li>이후 구조화 폼 수기 등록</li>
-            <li>로그인 사용자 간 전체 목록 공유</li>
-          </ul>
         </div>
       </section>
 

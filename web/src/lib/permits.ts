@@ -20,9 +20,12 @@ type PermitRow = {
   safety_check: string;
   renewal_target: string;
   source_type: string;
+  profiles: { name: string } | null;
 };
 
-function toPermitRecord(row: PermitRow): PermitRecord {
+export type PermitWithStaff = PermitRecord & { staffName: string | null };
+
+function toPermitWithStaff(row: PermitRow): PermitWithStaff {
   return {
     id: row.record_no,
     kind: row.kind as PermitKind,
@@ -37,7 +40,20 @@ function toPermitRecord(row: PermitRow): PermitRecord {
     safetyCheck: row.safety_check as PermitRecord["safetyCheck"],
     renewalTarget: row.renewal_target as PermitRecord["renewalTarget"],
     sourceType: row.source_type as PermitRecord["sourceType"],
+    staffName: row.profiles?.name ?? null,
   };
+}
+
+export type StaffOption = { id: string; name: string };
+
+export async function getStaffList(): Promise<StaffOption[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, name")
+    .eq("status", "active")
+    .order("name");
+  return (data ?? []) as StaffOption[];
 }
 
 export type PermitFilters = {
@@ -45,16 +61,17 @@ export type PermitFilters = {
   status?: string;
   kind?: string;
   category?: string;
+  staffName?: string;
 };
 
 export async function getPermits(
   filters: PermitFilters = {},
-): Promise<PermitRecord[]> {
+): Promise<PermitWithStaff[]> {
   const supabase = await createClient();
   let query = supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, profiles!created_by(name)",
     )
     .order("created_at", { ascending: false });
 
@@ -66,6 +83,15 @@ export async function getPermits(
       `advertiser.ilike.%${filters.q}%,place.ilike.%${filters.q}%`,
     );
   }
+  if (filters.staffName) {
+    const { data: staffData } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("name", `%${filters.staffName}%`);
+    const ids = (staffData ?? []).map((s: { id: string }) => s.id);
+    if (ids.length === 0) return [];
+    query = query.in("created_by", ids);
+  }
 
   const { data, error } = await query;
 
@@ -74,21 +100,21 @@ export async function getPermits(
     return [];
   }
 
-  return (data as PermitRow[]).map(toPermitRecord);
+  return (data as PermitRow[]).map(toPermitWithStaff);
 }
 
-export async function getPermit(recordNo: string): Promise<PermitRecord | null> {
+export async function getPermit(recordNo: string): Promise<PermitWithStaff | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, profiles!created_by(name)",
     )
     .eq("record_no", recordNo)
     .single();
 
   if (error || !data) return null;
-  return toPermitRecord(data as PermitRow);
+  return toPermitWithStaff(data as PermitRow);
 }
 
 export type PermitStats = {

@@ -20,6 +20,7 @@ export default async function PermitsPage({ searchParams }: PageProps) {
     status: typeof params.status === "string" ? params.status : undefined,
     kind: typeof params.kind === "string" ? params.kind : undefined,
     category: typeof params.category === "string" ? params.category : undefined,
+    staffName: typeof params.staffName === "string" ? params.staffName : undefined,
   };
 
   return (

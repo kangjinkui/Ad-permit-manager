@@ -42,3 +42,33 @@ export async function updateStatus(formData: FormData) {
   revalidatePath("/permits");
   revalidatePath("/dashboard");
 }
+
+export async function deletePermit(formData: FormData) {
+  const user = await requireUser();
+  if (!user) redirect("/login");
+
+  const permitNo = formData.get("permit_id")?.toString() ?? "";
+  if (!permitNo) return;
+
+  const supabase = await createClient();
+
+  // 이력 먼저 삭제 (FK 제약)
+  await supabase
+    .from("permit_status_history")
+    .delete()
+    .eq("permit_no", permitNo);
+
+  const { error } = await supabase
+    .from("permit_records")
+    .delete()
+    .eq("record_no", permitNo);
+
+  if (error) {
+    console.error("deletePermit error:", error.message);
+    return;
+  }
+
+  revalidatePath("/permits");
+  revalidatePath("/dashboard");
+  redirect("/permits");
+}
