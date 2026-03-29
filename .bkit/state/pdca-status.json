@@ -1,13 +1,18 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-27T01:33:58.004Z",
+  "lastUpdated": "2026-03-29T05:22:29.738Z",
   "activeFeatures": [
     "web",
     "permits",
     "dashboard",
     "new",
     "[id]",
-    "upload"
+    "upload",
+    "login",
+    "register",
+    "pending",
+    "admin",
+    "users"
   ],
   "primaryFeature": "web",
   "features": {
@@ -20,9 +25,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:26:49.355Z",
-        "lastUpdated": "2026-03-27T01:33:48.315Z"
+        "lastUpdated": "2026-03-29T05:22:21.406Z"
       },
-      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\components\\excel-upload-client.tsx"
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\lib\\permits.ts"
     },
     "permits": {
       "phase": "do",
@@ -33,7 +38,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:27:27.592Z",
-        "lastUpdated": "2026-03-27T01:27:27.592Z"
+        "lastUpdated": "2026-03-29T05:02:02.838Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\page.tsx"
     },
@@ -46,7 +51,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:27:40.767Z",
-        "lastUpdated": "2026-03-27T01:27:40.767Z"
+        "lastUpdated": "2026-03-29T05:01:55.544Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\dashboard\\page.tsx"
     },
@@ -59,9 +64,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:28:27.640Z",
-        "lastUpdated": "2026-03-27T01:28:49.735Z"
+        "lastUpdated": "2026-03-29T05:22:04.508Z"
       },
-      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\new\\page.tsx"
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\new\\actions.ts"
     },
     "[id]": {
       "phase": "do",
@@ -72,9 +77,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:29:03.132Z",
-        "lastUpdated": "2026-03-27T01:29:29.285Z"
+        "lastUpdated": "2026-03-29T05:22:29.738Z"
       },
-      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\[id]\\page.tsx"
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\[id]\\actions.ts"
     },
     "upload": {
       "phase": "do",
@@ -85,9 +90,74 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:33:17.623Z",
-        "lastUpdated": "2026-03-27T01:33:58.004Z"
+        "lastUpdated": "2026-03-29T05:02:30.374Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\upload\\page.tsx"
+    },
+    "login": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-29T04:37:34.896Z",
+        "lastUpdated": "2026-03-29T05:13:43.392Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\login\\actions.ts"
+    },
+    "register": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-29T05:00:07.948Z",
+        "lastUpdated": "2026-03-29T05:00:21.315Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\register\\page.tsx"
+    },
+    "pending": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-29T05:00:34.001Z",
+        "lastUpdated": "2026-03-29T05:00:34.001Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\login\\pending\\page.tsx"
+    },
+    "admin": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-29T05:00:41.631Z",
+        "lastUpdated": "2026-03-29T05:00:41.631Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\admin\\layout.tsx"
+    },
+    "users": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-29T05:00:46.914Z",
+        "lastUpdated": "2026-03-29T05:01:12.635Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\admin\\users\\page.tsx"
     }
   },
   "pipeline": {
@@ -98,7 +168,7 @@
   "session": {
     "startedAt": "2026-03-27T01:12:32.946Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-27T01:33:58.004Z"
+    "lastActivity": "2026-03-29T05:22:29.738Z"
   },
   "history": [
     {
@@ -176,6 +246,132 @@
     {
       "timestamp": "2026-03-27T01:33:58.004Z",
       "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T04:37:34.896Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T04:59:12.445Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T04:59:26.347Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T04:59:38.666Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T04:59:57.049Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:00:07.949Z",
+      "feature": "register",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:00:21.315Z",
+      "feature": "register",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:00:34.001Z",
+      "feature": "pending",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:00:41.631Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:00:46.914Z",
+      "feature": "users",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:01:12.635Z",
+      "feature": "users",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:01:27.595Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:01:55.544Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:02:02.838Z",
+      "feature": "permits",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:02:09.870Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:02:24.916Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:02:30.374Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:13:43.392Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:22:04.508Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:22:21.406Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:22:29.738Z",
+      "feature": "[id]",
       "phase": "do",
       "action": "updated"
     }

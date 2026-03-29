@@ -9,19 +9,18 @@ export async function updateStatus(formData: FormData) {
   const user = await requireUser();
   if (!user) redirect("/login");
 
-  const permitId = formData.get("permit_id")?.toString() ?? "";
+  const permitNo = formData.get("permit_id")?.toString() ?? "";
   const newStatus = formData.get("new_status")?.toString() ?? "";
   const note = formData.get("note")?.toString().trim() || null;
 
-  if (!permitId || !newStatus) return;
+  if (!permitNo || !newStatus) return;
 
   const supabase = await createClient();
 
-  // 현재 상태 조회 (이력용)
   const { data: current } = await supabase
     .from("permit_records")
     .select("status")
-    .eq("id", permitId)
+    .eq("record_no", permitNo)
     .single();
 
   const fromStatus = current?.status ?? null;
@@ -29,17 +28,17 @@ export async function updateStatus(formData: FormData) {
   await supabase
     .from("permit_records")
     .update({ status: newStatus })
-    .eq("id", permitId);
+    .eq("record_no", permitNo);
 
   await supabase.from("permit_status_history").insert({
-    permit_id: permitId,
+    permit_no: permitNo,
     from_status: fromStatus,
     to_status: newStatus,
     changed_by: user.id,
     note,
   });
 
-  revalidatePath(`/permits/${permitId}`);
+  revalidatePath(`/permits/${permitNo}`);
   revalidatePath("/permits");
   revalidatePath("/dashboard");
 }

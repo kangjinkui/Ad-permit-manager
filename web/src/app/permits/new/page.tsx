@@ -1,7 +1,7 @@
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
-import { getOptionalUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import {
   permitCategories,
@@ -16,16 +16,16 @@ type PageProps = {
 
 export default async function NewPermitPage({ searchParams }: PageProps) {
   const envReady = hasSupabaseEnv();
-  const user = await getOptionalUser();
+  const profile = await getProfile();
   const params = (await searchParams) ?? {};
   const error = typeof params.error === "string" ? params.error : null;
 
   return (
     <main className="app-frame">
-      <NavShell pathname="/permits/new" />
+      <NavShell pathname="/permits/new" profile={profile} />
       <section className="flex flex-col gap-6">
         {!envReady ? <SetupBanner /> : null}
-        <AuthStatus email={user?.email} envReady={envReady} />
+        <AuthStatus email={profile?.email} envReady={envReady} />
 
         <form action={createPermit} className="panel">
           <div>

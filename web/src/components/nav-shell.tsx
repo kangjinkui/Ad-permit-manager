@@ -1,14 +1,27 @@
 import Link from "next/link";
-import { clsx } from "clsx";
+import { signOut } from "@/app/login/actions";
+import type { Profile } from "@/lib/auth";
 
-const navItems = [
+const baseNavItems = [
   { href: "/dashboard", label: "대시보드" },
   { href: "/permits", label: "허가/신고 목록" },
   { href: "/permits/new", label: "신규 등록" },
-  { href: "/login", label: "로그인" },
 ];
 
-export function NavShell({ pathname }: { pathname: string }) {
+export function NavShell({
+  pathname,
+  profile,
+}: {
+  pathname: string;
+  profile: Profile | null;
+}) {
+  const navItems = [
+    ...baseNavItems,
+    ...(profile?.role === "admin"
+      ? [{ href: "/admin/users", label: "사용자 관리" }]
+      : []),
+  ];
+
   return (
     <aside className="panel-dark flex flex-col gap-6 p-5">
       <div className="rounded-[28px] border border-white/10 bg-linear-to-br from-sky-500/25 to-cyan-300/10 p-5">
@@ -19,8 +32,7 @@ export function NavShell({ pathname }: { pathname: string }) {
           광고물 허가·신고 관리
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          로그인, 등록, 상태관리, 엑셀 초기이관을 Vercel 배포 구조에 맞게
-          통합하는 내부 업무 앱 초안입니다.
+          이메일·비밀번호 로그인 + 관리자 승인 기반 내부 업무 앱입니다.
         </p>
       </div>
 
@@ -46,13 +58,27 @@ export function NavShell({ pathname }: { pathname: string }) {
         })}
       </nav>
 
-      <div className="mt-auto rounded-3xl border border-white/20 bg-white/10 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-          인증 방향
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-200">
-          `@gangnam.go.kr` 메일 주소로 Supabase 매직링크 로그인을 적용할 예정입니다.
-        </p>
+      <div className="mt-auto flex flex-col gap-3">
+        {profile ? (
+          <div className="rounded-3xl border border-white/20 bg-white/10 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              로그인 계정
+            </p>
+            <p className="mt-1 text-sm font-medium text-white">
+              {profile.name}
+            </p>
+            <p className="text-xs text-slate-400">{profile.email}</p>
+          </div>
+        ) : null}
+
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="w-full rounded-3xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/20"
+          >
+            로그아웃
+          </button>
+        </form>
       </div>
     </aside>
   );

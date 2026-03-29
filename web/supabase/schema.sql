@@ -2,6 +2,8 @@ create extension if not exists pgcrypto;
 
 create type public.user_role as enum ('staff', 'admin');
 
+create type public.user_status as enum ('pending', 'active', 'rejected');
+
 create type public.permit_kind as enum (
   '벽면이용간판',
   '돌출간판',
@@ -34,49 +36,58 @@ create type public.renewal_target_status as enum ('연장대상', '연장대상 
 create type public.record_source_type as enum ('excel', 'manual');
 
 create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text not null unique,
-  name text,
-  role public.user_role not null default 'staff',
+  id         uuid primary key references auth.users(id) on delete cascade,
+  email      text not null unique,
+  name       text not null,
+  role       public.user_role   not null default 'staff',
+  status     public.user_status not null default 'pending',
   department text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint profiles_email_domain_check
-    check (email ~* '^[A-Z0-9._%+-]+@gangnam\.go\.kr$')
-);
-
-create table if not exists public.permit_records (
-  id uuid primary key default gen_random_uuid(),
-  record_no text not null unique,
-  kind public.permit_kind not null,
-  category public.permit_category not null,
-  advertiser text not null,
-  place text not null,
-  content text not null,
-  size_text text,
-  quantity integer not null default 1 check (quantity > 0),
-  status public.permit_status not null,
-  processed_at date,
-  hearing_at date,
-  safety_check public.safety_check_status not null default '확인필요',
-  renewal_target public.renewal_target_status not null default '연장대상 아님',
-  phone text,
-  notes text,
-  source_type public.record_source_type not null default 'manual',
-  created_by uuid references public.profiles(id),
-  updated_by uuid references public.profiles(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.permit_records (
+  id             uuid primary key default gen_random_uuid(),
+  record_no      text not null unique,
+  kind           public.permit_kind not null,
+  category       public.permit_category not null,
+  advertiser     text not null,
+  place          text not null,
+  content        text not null,
+  size_text      text,
+  quantity       integer not null default 1 check (quantity > 0),
+  status         public.permit_status not null,
+  processed_at   date,
+  hearing_at     date,
+  safety_check   public.safety_check_status not null default '확인필요',
+  renewal_target public.renewal_target_status not null default '연장대상 아님',
+  phone          text,
+  notes          text,
+  source_type    public.record_source_type not null default 'manual',
+  created_by     uuid references public.profiles(id),
+  updated_by     uuid references public.profiles(id),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create table if not exists public.permit_status_history (
+  id         uuid primary key default gen_random_uuid(),
+  permit_no  text not null,
+  from_status text,
+  to_status  text not null,
+  changed_by uuid references public.profiles(id),
+  changed_at timestamptz not null default now(),
+  note       text
+);
+
 create table if not exists public.activity_logs (
-  id uuid primary key default gen_random_uuid(),
+  id               uuid primary key default gen_random_uuid(),
   permit_record_id uuid not null references public.permit_records(id) on delete cascade,
-  actor_id uuid references public.profiles(id),
-  action_type text not null,
-  before_data jsonb,
-  after_data jsonb,
-  created_at timestamptz not null default now()
+  actor_id         uuid references public.profiles(id),
+  action_type      text not null,
+  before_data      jsonb,
+  after_data       jsonb,
+  created_at       timestamptz not null default now()
 );
 
 create index if not exists permit_records_status_idx
@@ -114,19 +125,19 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.email !~* '^[A-Z0-9._%+-]+@gangnam\.go\.kr$' then
-    raise exception 'Only @gangnam.go.kr email addresses are allowed.';
-  end if;
-
-  insert into public.profiles (id, email, name)
+  insert into public.profiles (id, email, name, status)
   values (
     new.id,
     new.email,
-    coalesce(new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1))
+    coalesce(
+      nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+      split_part(new.email, '@', 1)
+    ),
+    'pending'
   )
   on conflict (id) do update
-    set email = excluded.email,
-        name = coalesce(public.profiles.name, excluded.name),
+    set email      = excluded.email,
+        name       = coalesce(nullif(trim(public.profiles.name), ''), excluded.name),
         updated_at = now();
 
   return new;
@@ -152,12 +163,14 @@ alter table public.profiles enable row level security;
 alter table public.permit_records enable row level security;
 alter table public.activity_logs enable row level security;
 
+-- profiles: 인증된 사용자는 모든 프로필 읽기 가능
 create policy "authenticated users can read profiles"
   on public.profiles
   for select
   to authenticated
   using (true);
 
+-- profiles: 본인 프로필 수정 (status, role 제외 — server action에서 강제)
 create policy "users can update their own profile"
   on public.profiles
   for update
@@ -165,46 +178,95 @@ create policy "users can update their own profile"
   using ((select auth.uid()) = id)
   with check ((select auth.uid()) = id);
 
-create policy "authenticated users can read permits"
+-- profiles: admin은 모든 프로필 수정 가능 (승인/거절/역할 변경)
+create policy "admins can update any profile"
+  on public.profiles
+  for update
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid())
+        and role = 'admin'
+        and status = 'active'
+    )
+  );
+
+-- permit_records: active 사용자만 읽기
+create policy "active users can read permits"
   on public.permit_records
   for select
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
 
-create policy "authenticated users can insert permits"
+-- permit_records: active 사용자만 등록
+create policy "active users can insert permits"
   on public.permit_records
   for insert
   to authenticated
-  with check ((select auth.uid()) is not null);
+  with check (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
 
-create policy "authenticated users can update permits"
+-- permit_records: active 사용자만 수정
+create policy "active users can update permits"
   on public.permit_records
   for update
   to authenticated
-  using ((select auth.uid()) is not null)
-  with check ((select auth.uid()) is not null);
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
 
+-- permit_records: admin만 삭제
 create policy "admins can delete permits"
   on public.permit_records
   for delete
   to authenticated
   using (
     exists (
-      select 1
-      from public.profiles
+      select 1 from public.profiles
       where id = (select auth.uid())
         and role = 'admin'
+        and status = 'active'
     )
   );
 
-create policy "authenticated users can read activity logs"
+-- activity_logs: active 사용자 읽기/쓰기
+create policy "active users can read activity logs"
   on public.activity_logs
   for select
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
 
-create policy "authenticated users can insert activity logs"
+create policy "active users can insert activity logs"
   on public.activity_logs
   for insert
   to authenticated
-  with check ((select auth.uid()) is not null);
+  with check (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );

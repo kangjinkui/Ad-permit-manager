@@ -6,7 +6,14 @@
       "Bash(npx tsc:*)",
       "Bash(taskkill:*)",
       "Bash(netstat -ano)",
-      "Bash(findstr :3000)"
+      "Bash(findstr :3000)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git add:*)",
+      "Bash(npm run:*)",
+      "Bash(find /c/Users/user/dev/Ad-permit-manager/web/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(find C:UsersuserdevAd-permit-managersupabase -type f -name *.sql)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

@@ -2,7 +2,7 @@ import { NavShell } from "@/components/nav-shell";
 import { PermitsTable } from "@/components/permits-table";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
-import { getOptionalUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import type { PermitFilters } from "@/lib/permits";
 
@@ -12,7 +12,7 @@ type PageProps = {
 
 export default async function PermitsPage({ searchParams }: PageProps) {
   const envReady = hasSupabaseEnv();
-  const user = await getOptionalUser();
+  const profile = await getProfile();
   const params = (await searchParams) ?? {};
 
   const filters: PermitFilters = {
@@ -24,10 +24,10 @@ export default async function PermitsPage({ searchParams }: PageProps) {
 
   return (
     <main className="app-frame">
-      <NavShell pathname="/permits" />
+      <NavShell pathname="/permits" profile={profile} />
       <section className="flex flex-col gap-6">
         {!envReady ? <SetupBanner /> : null}
-        <AuthStatus email={user?.email} envReady={envReady} />
+        <AuthStatus email={profile?.email} envReady={envReady} />
         <PermitsTable searchParams={filters} />
       </section>
     </main>

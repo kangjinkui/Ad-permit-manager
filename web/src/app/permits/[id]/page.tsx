@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
-import { getOptionalUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getPermit, getPermitHistory } from "@/lib/permits";
 import { permitStatuses } from "@/lib/mock-data";
@@ -24,7 +24,7 @@ const statusTone: Record<string, string> = {
 export default async function PermitDetailPage({ params }: PageProps) {
   const { id } = await params;
   const envReady = hasSupabaseEnv();
-  const user = await getOptionalUser();
+  const profile = await getProfile();
 
   const [permit, history] = await Promise.all([
     getPermit(id),
@@ -50,9 +50,9 @@ export default async function PermitDetailPage({ params }: PageProps) {
 
   return (
     <main className="app-frame">
-      <NavShell pathname="/permits" />
+      <NavShell pathname="/permits" profile={profile} />
       <section className="flex flex-col gap-6">
-        <AuthStatus email={user?.email} envReady={envReady} />
+        <AuthStatus email={profile?.email} envReady={envReady} />
 
         {/* 헤더 */}
         <div className="flex items-center gap-4">

@@ -9,14 +9,16 @@ function padded(n: number) {
   return String(n).padStart(3, "0");
 }
 
-async function generateId(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string> {
+async function generateRecordNo(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `PM-${year}-`;
 
   const { count } = await supabase
     .from("permit_records")
     .select("id", { count: "exact", head: true })
-    .like("id", `${prefix}%`);
+    .like("record_no", `${prefix}%`);
 
   return `${prefix}${padded((count ?? 0) + 1)}`;
 }
@@ -35,17 +37,18 @@ export async function createPermit(formData: FormData) {
   const hearingAt = formData.get("hearing_at")?.toString() || null;
   const quantity = parseInt(formData.get("quantity")?.toString() ?? "1", 10);
   const safetyCheck = formData.get("safety_check")?.toString() ?? "확인필요";
-  const renewalTarget = formData.get("renewal_target")?.toString() ?? "연장대상 아님";
+  const renewalTarget =
+    formData.get("renewal_target")?.toString() ?? "연장대상 아님";
 
   if (!advertiser || !kind || !category || !place || !content || !status) {
     redirect("/permits/new?error=필수+항목을+모두+입력해+주세요");
   }
 
   const supabase = await createClient();
-  const id = await generateId(supabase);
+  const recordNo = await generateRecordNo(supabase);
 
   const { error: insertError } = await supabase.from("permit_records").insert({
-    id,
+    record_no: recordNo,
     kind,
     category,
     advertiser,
@@ -65,9 +68,8 @@ export async function createPermit(formData: FormData) {
     redirect(`/permits/new?error=${encodeURIComponent(insertError.message)}`);
   }
 
-  // 최초 등록 이력 기록
   await supabase.from("permit_status_history").insert({
-    permit_id: id,
+    permit_no: recordNo,
     from_status: null,
     to_status: status,
     changed_by: user.id,

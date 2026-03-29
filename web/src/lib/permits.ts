@@ -6,9 +6,8 @@ import type {
   PermitCategory,
 } from "@/lib/mock-data";
 
-// DB에서 반환되는 snake_case 행 타입
 type PermitRow = {
-  id: string;
+  record_no: string;
   kind: string;
   category: string;
   advertiser: string;
@@ -25,7 +24,7 @@ type PermitRow = {
 
 function toPermitRecord(row: PermitRow): PermitRecord {
   return {
-    id: row.id,
+    id: row.record_no,
     kind: row.kind as PermitKind,
     category: row.category as PermitCategory,
     advertiser: row.advertiser,
@@ -48,24 +47,20 @@ export type PermitFilters = {
   category?: string;
 };
 
-export async function getPermits(filters: PermitFilters = {}): Promise<PermitRecord[]> {
+export async function getPermits(
+  filters: PermitFilters = {},
+): Promise<PermitRecord[]> {
   const supabase = await createClient();
   let query = supabase
     .from("permit_records")
     .select(
-      "id, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
     )
     .order("created_at", { ascending: false });
 
-  if (filters.status) {
-    query = query.eq("status", filters.status);
-  }
-  if (filters.kind) {
-    query = query.eq("kind", filters.kind);
-  }
-  if (filters.category) {
-    query = query.eq("category", filters.category);
-  }
+  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.kind) query = query.eq("kind", filters.kind);
+  if (filters.category) query = query.eq("category", filters.category);
   if (filters.q) {
     query = query.or(
       `advertiser.ilike.%${filters.q}%,place.ilike.%${filters.q}%`,
@@ -82,14 +77,14 @@ export async function getPermits(filters: PermitFilters = {}): Promise<PermitRec
   return (data as PermitRow[]).map(toPermitRecord);
 }
 
-export async function getPermit(id: string): Promise<PermitRecord | null> {
+export async function getPermit(recordNo: string): Promise<PermitRecord | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "id, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type",
     )
-    .eq("id", id)
+    .eq("record_no", recordNo)
     .single();
 
   if (error || !data) return null;
@@ -130,19 +125,21 @@ export type StatusHistory = {
   note: string | null;
 };
 
-export async function getPermitHistory(permitId: string): Promise<StatusHistory[]> {
+export async function getPermitHistory(
+  permitNo: string,
+): Promise<StatusHistory[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("permit_status_history")
-    .select("id, permit_id, from_status, to_status, changed_at, note")
-    .eq("permit_id", permitId)
+    .select("id, permit_no, from_status, to_status, changed_at, note")
+    .eq("permit_no", permitNo)
     .order("changed_at", { ascending: false });
 
   if (error || !data) return [];
 
   return data.map((r) => ({
     id: r.id,
-    permitId: r.permit_id,
+    permitId: r.permit_no,
     fromStatus: r.from_status,
     toStatus: r.to_status,
     changedAt: r.changed_at,
