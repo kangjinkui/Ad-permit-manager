@@ -20,7 +20,7 @@ type PermitRow = {
   safety_check: string;
   renewal_target: string;
   source_type: string;
-  profiles: { name: string } | null;
+  profiles: { name: string }[] | null;
 };
 
 export type PermitWithStaff = PermitRecord & { staffName: string | null };
@@ -40,7 +40,7 @@ function toPermitWithStaff(row: PermitRow): PermitWithStaff {
     safetyCheck: row.safety_check as PermitRecord["safetyCheck"],
     renewalTarget: row.renewal_target as PermitRecord["renewalTarget"],
     sourceType: row.source_type as PermitRecord["sourceType"],
-    staffName: row.profiles?.name ?? null,
+    staffName: row.profiles?.[0]?.name ?? null,
   };
 }
 

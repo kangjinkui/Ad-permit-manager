@@ -86,7 +86,7 @@ function downloadTemplate() {
     1, "접수", "2026-03-29", "", "대상아님", "연장대상 아님",
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADERS, sampleRow]);
+  const ws = XLSX.utils.aoa_to_sheet([[...TEMPLATE_HEADERS], sampleRow]);
   ws["!cols"] = TEMPLATE_HEADERS.map((h) => ({ wch: h.length < 6 ? 14 : 24 }));
 
   // 선택값 안내 시트
