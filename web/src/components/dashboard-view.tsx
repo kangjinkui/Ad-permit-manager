@@ -27,12 +27,10 @@ export function DashboardView({ stats, recentPermits }: Props) {
   return (
     <div className="flex flex-col gap-6">
       <section className="panel">
-        <div>
-          <p className="eyebrow">Server-first Dashboard</p>
-          <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-950">
-            담당자가 로그인하면 허가·신고 현황을 한 화면에서 확인합니다.
-          </h2>
-        </div>
+        <p className="eyebrow">광고물 허가·신고 관리</p>
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+          담당자가 로그인하면 허가·신고 현황을 한 화면에서 확인합니다.
+        </h2>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
