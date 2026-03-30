@@ -29,7 +29,7 @@ export default async function PermitsPage({ searchParams }: PageProps) {
       <section className="flex flex-col gap-6">
         {!envReady ? <SetupBanner /> : null}
         <AuthStatus email={profile?.email} envReady={envReady} />
-        <PermitsTable searchParams={filters} />
+        <PermitsTable searchParams={filters} isAdmin={profile?.role === "admin"} />
       </section>
     </main>
   );

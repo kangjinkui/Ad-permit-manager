@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser, requireAdmin } from "@/lib/auth";
 
 export async function updateStatus(formData: FormData) {
   const user = await requireUser();
@@ -30,13 +30,14 @@ export async function updateStatus(formData: FormData) {
     .update({ status: newStatus })
     .eq("record_no", permitNo);
 
-  await supabase.from("permit_status_history").insert({
+  const { error: histError } = await supabase.from("permit_status_history").insert({
     permit_no: permitNo,
     from_status: fromStatus,
     to_status: newStatus,
     changed_by: user.id,
     note,
   });
+  if (histError) console.error("history insert error:", histError.message);
 
   revalidatePath(`/permits/${permitNo}`);
   revalidatePath("/permits");
@@ -44,8 +45,7 @@ export async function updateStatus(formData: FormData) {
 }
 
 export async function deletePermit(formData: FormData) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  await requireAdmin();
 
   const permitNo = formData.get("permit_id")?.toString() ?? "";
   if (!permitNo) return;

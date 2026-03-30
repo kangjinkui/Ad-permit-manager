@@ -95,14 +95,16 @@ export default async function PermitDetailPage({ params }: PageProps) {
           </dl>
         </article>
 
-        {/* 삭제 */}
-        <article className="panel flex items-center justify-between gap-4">
-          <div>
-            <p className="eyebrow">Danger Zone</p>
-            <p className="mt-2 text-sm text-slate-600">이 항목을 삭제하면 이력을 포함한 모든 데이터가 영구 삭제됩니다.</p>
-          </div>
-          <DeleteButton permitId={permit.id} advertiser={permit.advertiser} />
-        </article>
+        {/* 삭제 — admin 전용 */}
+        {profile?.role === "admin" && (
+          <article className="panel flex items-center justify-between gap-4">
+            <div>
+              <p className="eyebrow">Danger Zone</p>
+              <p className="mt-2 text-sm text-slate-600">이 항목을 삭제하면 이력을 포함한 모든 데이터가 영구 삭제됩니다.</p>
+            </div>
+            <DeleteButton permitId={permit.id} advertiser={permit.advertiser} />
+          </article>
+        )}
 
         {/* 상태 변경 */}
         <article className="panel">
