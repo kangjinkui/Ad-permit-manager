@@ -15,12 +15,17 @@ async function generateRecordNo(
   const year = new Date().getFullYear();
   const prefix = `PM-${year}-`;
 
-  const { count } = await supabase
+  const { data } = await supabase
     .from("permit_records")
-    .select("record_no", { count: "exact", head: true })
-    .like("record_no", `${prefix}%`);
+    .select("record_no")
+    .like("record_no", `${prefix}%`)
+    .order("record_no", { ascending: false })
+    .limit(1);
 
-  return `${prefix}${padded((count ?? 0) + 1)}`;
+  const last = data?.[0]?.record_no;
+  const lastNum = last ? parseInt(last.replace(prefix, ""), 10) : 0;
+
+  return `${prefix}${padded((isNaN(lastNum) ? 0 : lastNum) + 1)}`;
 }
 
 export async function createPermit(formData: FormData) {
