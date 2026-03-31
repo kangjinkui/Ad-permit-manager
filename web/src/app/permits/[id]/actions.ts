@@ -65,6 +65,8 @@ export async function updatePermit(formData: FormData) {
       hearing_at: formData.get("hearing_at")?.toString() || null,
       safety_check: formData.get("safety_check")?.toString(),
       renewal_target: formData.get("renewal_target")?.toString(),
+      permit_fee: formData.get("permit_fee") ? Number(formData.get("permit_fee")) : null,
+      safety_fee: formData.get("safety_fee") ? Number(formData.get("safety_fee")) : null,
       updated_by: user.id,
     })
     .eq("record_no", permitNo);

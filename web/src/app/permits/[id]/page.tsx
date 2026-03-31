@@ -43,8 +43,11 @@ export default async function PermitDetailPage({ params }: PageProps) {
 
         {/* 헤더 */}
         <div className="flex items-center gap-4">
-          <Link href="/permits" className="text-sm text-slate-500 hover:text-slate-800">
-            ← 목록
+          <Link
+            href="/permits"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 active:scale-95 transition-all"
+          >
+            ← 목록으로
           </Link>
           <span className="text-slate-300">/</span>
           <span className="text-sm font-medium text-slate-700">{permit.advertiser}</span>
@@ -125,6 +128,31 @@ export default async function PermitDetailPage({ params }: PageProps) {
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 심의일자
                 <input name="hearing_at" type="date" className="field" defaultValue={permit.hearingAt ?? ""} />
+              </label>
+
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                허가수수료 (원)
+                <input
+                  name="permit_fee"
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="field"
+                  defaultValue={permit.permitFee ?? ""}
+                  placeholder="0"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                안전점검 수수료 (원)
+                <input
+                  name="safety_fee"
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="field"
+                  defaultValue={permit.safetyFee ?? ""}
+                  placeholder="0"
+                />
               </label>
             </div>
 

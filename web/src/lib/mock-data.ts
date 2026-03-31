@@ -35,6 +35,8 @@ export type PermitRecord = {
   safetyCheck: "대상" | "대상아님" | "확인필요";
   renewalTarget: "연장대상" | "연장대상 아님";
   sourceType: "excel" | "manual";
+  permitFee: number | null;
+  safetyFee: number | null;
 };
 
 export const mockPermits: PermitRecord[] = [
@@ -52,6 +54,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상아님",
     renewalTarget: "연장대상 아님",
     sourceType: "excel",
+    permitFee: null,
+    safetyFee: null,
   },
   {
     id: "PM-2026-002",
@@ -67,6 +71,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상아님",
     renewalTarget: "연장대상 아님",
     sourceType: "manual",
+    permitFee: null,
+    safetyFee: null,
   },
   {
     id: "PM-2026-003",
@@ -82,6 +88,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상아님",
     renewalTarget: "연장대상 아님",
     sourceType: "excel",
+    permitFee: null,
+    safetyFee: null,
   },
   {
     id: "PM-2026-004",
@@ -97,6 +105,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상",
     renewalTarget: "연장대상 아님",
     sourceType: "manual",
+    permitFee: null,
+    safetyFee: null,
   },
   {
     id: "PM-2026-005",
@@ -112,6 +122,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상아님",
     renewalTarget: "연장대상 아님",
     sourceType: "manual",
+    permitFee: null,
+    safetyFee: null,
   },
   {
     id: "PM-2026-006",
@@ -127,6 +139,8 @@ export const mockPermits: PermitRecord[] = [
     safetyCheck: "대상아님",
     renewalTarget: "연장대상 아님",
     sourceType: "manual",
+    permitFee: null,
+    safetyFee: null,
   },
 ];
 
