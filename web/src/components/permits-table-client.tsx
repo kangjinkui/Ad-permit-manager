@@ -97,7 +97,6 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
                   />
                 </th>
               )}
-              <th className="px-4 py-3 font-medium">관리번호</th>
               <th className="px-4 py-3 font-medium">광고주</th>
               <th className="px-4 py-3 font-medium">종류/구분</th>
               <th className="px-4 py-3 font-medium">상태</th>
@@ -110,7 +109,7 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
             {permits.length === 0 ? (
               <tr>
                 <td
-                  colSpan={isAdmin ? 8 : 7}
+                  colSpan={isAdmin ? 7 : 6}
                   className="px-4 py-10 text-center text-sm text-slate-400"
                 >
                   조건에 맞는 항목이 없습니다.
@@ -137,9 +136,6 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
                       />
                     </td>
                   )}
-                  <td className="px-4 py-4 text-sm font-medium text-slate-950">
-                    {item.id}
-                  </td>
                   <td className="px-4 py-4">
                     <div className="font-medium text-slate-950">{item.advertiser}</div>
                     <div className="mt-1 text-sm text-slate-500">{item.place}</div>

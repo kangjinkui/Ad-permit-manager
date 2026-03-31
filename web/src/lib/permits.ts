@@ -20,10 +20,11 @@ type PermitRow = {
   safety_check: string;
   renewal_target: string;
   source_type: string;
+  notes: string | null;
   profiles: { name: string } | { name: string }[] | null;
 };
 
-export type PermitWithStaff = PermitRecord & { staffName: string | null };
+export type PermitWithStaff = PermitRecord & { staffName: string | null; notes: string | null };
 
 function toPermitWithStaff(row: PermitRow): PermitWithStaff {
   return {
@@ -43,6 +44,7 @@ function toPermitWithStaff(row: PermitRow): PermitWithStaff {
     staffName: Array.isArray(row.profiles)
       ? (row.profiles[0]?.name ?? null)
       : (row.profiles?.name ?? null),
+    notes: row.notes ?? null,
   };
 }
 
@@ -73,7 +75,7 @@ export async function getPermits(
   let query = supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, profiles!created_by(name)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, profiles!created_by(name)",
     )
     .order("created_at", { ascending: false });
 
@@ -110,7 +112,7 @@ export async function getPermit(recordNo: string): Promise<PermitWithStaff | nul
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, profiles!created_by(name)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, profiles!created_by(name)",
     )
     .eq("record_no", recordNo)
     .single();
