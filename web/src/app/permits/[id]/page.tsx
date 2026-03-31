@@ -8,6 +8,7 @@ import { getPermit, getPermitHistory } from "@/lib/permits";
 import { permitStatuses, permitKinds, permitCategories } from "@/lib/mock-data";
 import { updateStatus, updatePermit, updateNotes } from "./actions";
 import { DeleteButton } from "./delete-button";
+import { FormWithToast } from "@/components/form-with-toast";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -50,7 +51,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
         </div>
 
         {/* 상세 정보 편집 */}
-        <form action={updatePermit}>
+        <FormWithToast action={updatePermit} successMessage="내용이 저장되었습니다.">
           <input type="hidden" name="permit_id" value={permit.id} />
           <article className="panel">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -133,10 +134,10 @@ export default async function PermitDetailPage({ params }: PageProps) {
               </button>
             </div>
           </article>
-        </form>
+        </FormWithToast>
 
         {/* 메모 */}
-        <form action={updateNotes}>
+        <FormWithToast action={updateNotes} successMessage="메모가 저장되었습니다.">
           <input type="hidden" name="permit_id" value={permit.id} />
           <article className="panel">
             <p className="eyebrow">Memo</p>
@@ -158,7 +159,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
               </button>
             </div>
           </article>
-        </form>
+        </FormWithToast>
 
         {/* 상태 변경 */}
         <article className="panel">
@@ -166,7 +167,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
           <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
             상태 변경
           </h3>
-          <form action={updateStatus} className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+          <FormWithToast action={updateStatus} successMessage="상태가 변경되었습니다." className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto]">
             <input type="hidden" name="permit_id" value={permit.id} />
             <select name="new_status" className="field" defaultValue={permit.status}>
               {permitStatuses.map((s) => (
@@ -183,7 +184,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
             <button type="submit" className="button-primary" disabled={!envReady}>
               변경
             </button>
-          </form>
+          </FormWithToast>
         </article>
 
         {/* 삭제 — admin 전용 */}
