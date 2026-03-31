@@ -16,7 +16,11 @@
       "Bash(xargs grep:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(find /c/Users/user/dev/Ad-permit-manager -name *.env* -o -name .env.local)"
+      "Bash(find /c/Users/user/dev/Ad-permit-manager -name *.env* -o -name .env.local)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(find /c/Users/user/dev/Ad-permit-manager -maxdepth 3 -type f -name *.tsx)"
     ]
   }
 }
