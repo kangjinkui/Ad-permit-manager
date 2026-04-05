@@ -90,6 +90,21 @@ create table if not exists public.activity_logs (
   created_at       timestamptz not null default now()
 );
 
+create table if not exists public.fee_calculations (
+  id                   uuid primary key default gen_random_uuid(),
+  permit_record_no     text references public.permit_records(record_no) on delete set null,
+  fee_sign_type        text not null,
+  permit_kind_snapshot text,
+  category_snapshot    text,
+  input_data           jsonb not null,
+  permit_fee           integer,
+  safety_fee           integer,
+  total_fee            integer,
+  change_fee           integer,
+  created_by           uuid references public.profiles(id),
+  created_at           timestamptz not null default now()
+);
+
 create index if not exists permit_records_status_idx
   on public.permit_records(status);
 
@@ -107,6 +122,12 @@ create index if not exists permit_records_hearing_at_idx
 
 create index if not exists activity_logs_permit_record_id_idx
   on public.activity_logs(permit_record_id, created_at desc);
+
+create index if not exists fee_calculations_permit_record_no_idx
+  on public.fee_calculations(permit_record_no, created_at desc);
+
+create index if not exists fee_calculations_created_by_idx
+  on public.fee_calculations(created_by, created_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -162,6 +183,7 @@ create trigger permit_records_set_updated_at
 alter table public.profiles enable row level security;
 alter table public.permit_records enable row level security;
 alter table public.activity_logs enable row level security;
+alter table public.fee_calculations enable row level security;
 
 -- profiles: 인증된 사용자는 모든 프로필 읽기 가능
 create policy "authenticated users can read profiles"
@@ -262,6 +284,28 @@ create policy "active users can read activity logs"
 
 create policy "active users can insert activity logs"
   on public.activity_logs
+  for insert
+  to authenticated
+  with check (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can read fee calculations"
+  on public.fee_calculations
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can insert fee calculations"
+  on public.fee_calculations
   for insert
   to authenticated
   with check (

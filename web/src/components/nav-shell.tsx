@@ -6,6 +6,7 @@ const baseNavItems = [
   { href: "/dashboard", label: "대시보드" },
   { href: "/permits", label: "허가/신고 목록" },
   { href: "/permits/new", label: "신규 등록" },
+  { href: "/fees", label: "수수료 계산기" },
 ];
 
 export function NavShell({
@@ -32,7 +33,7 @@ export function NavShell({
           광고물 허가·신고 관리
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          이메일·비밀번호 로그인 + 관리자 승인 기반 내부 업무 앱입니다.
+          내부 업무용 허가/신고 기록과 담당자 확인 흐름을 함께 관리합니다.
         </p>
       </div>
 
@@ -64,9 +65,7 @@ export function NavShell({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
               로그인 계정
             </p>
-            <p className="mt-1 text-sm font-medium text-white">
-              {profile.name}
-            </p>
+            <p className="mt-1 text-sm font-medium text-white">{profile.name}</p>
             <p className="text-xs text-slate-400">{profile.email}</p>
           </div>
         ) : null}
