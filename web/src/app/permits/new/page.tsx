@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
 import { SetupBanner } from "@/components/setup-banner";
-import { getProfile } from "@/lib/auth";
+import { getProfile, requireStaff } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import {
   permitCategories,
@@ -16,7 +17,7 @@ type PageProps = {
 
 export default async function NewPermitPage({ searchParams }: PageProps) {
   const envReady = hasSupabaseEnv();
-  const profile = await getProfile();
+  const profile = envReady ? await requireStaff() : await getProfile();
   const params = (await searchParams) ?? {};
   const error = typeof params.error === "string" ? params.error : null;
 
@@ -117,9 +118,9 @@ export default async function NewPermitPage({ searchParams }: PageProps) {
             <button type="submit" className="button-primary" disabled={!envReady}>
               저장
             </button>
-            <a href="/permits" className="button-secondary">
+            <Link href="/permits" className="button-secondary">
               취소
-            </a>
+            </Link>
           </div>
         </form>
       </section>

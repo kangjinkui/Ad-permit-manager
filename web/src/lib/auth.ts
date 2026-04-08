@@ -67,6 +67,11 @@ export async function requireAdmin(): Promise<Profile> {
   return profile;
 }
 
+export async function requireStaff(): Promise<Profile> {
+  const profile = await requireActiveUser();
+  return profile;
+}
+
 // 하위 호환 유지
 export async function getOptionalUser() {
   if (!hasSupabaseEnv()) return null;

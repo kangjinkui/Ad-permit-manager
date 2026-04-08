@@ -27,15 +27,3 @@ export async function rejectUser(userId: string) {
 
   revalidatePath("/admin/users");
 }
-
-export async function changeRole(
-  userId: string,
-  role: "staff" | "admin",
-) {
-  await requireAdmin();
-
-  const supabase = await createClient();
-  await supabase.from("profiles").update({ role }).eq("id", userId);
-
-  revalidatePath("/admin/users");
-}

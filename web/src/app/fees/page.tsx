@@ -2,13 +2,13 @@ import { AuthStatus } from "@/components/auth-status";
 import { FeeCalculatorClient } from "@/components/fee-calculator-client";
 import { NavShell } from "@/components/nav-shell";
 import { SetupBanner } from "@/components/setup-banner";
-import { getProfile } from "@/lib/auth";
+import { getProfile, requireStaff } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getPermits } from "@/lib/permits";
 
 export default async function FeesPage() {
   const envReady = hasSupabaseEnv();
-  const profile = await getProfile();
+  const profile = envReady ? await requireStaff() : await getProfile();
   const permits = envReady ? await getPermits({}) : [];
 
   return (

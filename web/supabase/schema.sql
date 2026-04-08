@@ -182,6 +182,7 @@ create trigger permit_records_set_updated_at
 
 alter table public.profiles enable row level security;
 alter table public.permit_records enable row level security;
+alter table public.permit_status_history enable row level security;
 alter table public.activity_logs enable row level security;
 alter table public.fee_calculations enable row level security;
 
@@ -257,7 +258,7 @@ create policy "active users can update permits"
   );
 
 -- permit_records: admin만 삭제
-create policy "admins can delete permits"
+create policy "active users can delete permits"
   on public.permit_records
   for delete
   to authenticated
@@ -265,8 +266,40 @@ create policy "admins can delete permits"
     exists (
       select 1 from public.profiles
       where id = (select auth.uid())
-        and role = 'admin'
         and status = 'active'
+    )
+  );
+
+create policy "active users can read history"
+  on public.permit_status_history
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can insert history"
+  on public.permit_status_history
+  for insert
+  to authenticated
+  with check (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can delete history"
+  on public.permit_status_history
+  for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
     )
   );
 

@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import {
   calculateFeeResult,
   isFeeSignTypeCompatible,
@@ -26,8 +25,7 @@ type ActionResult = {
 export async function saveFeeCalculation(
   payload: SaveFeeCalculationPayload,
 ): Promise<ActionResult> {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   const result = calculateFeeResult(payload.input, {
     category: payload.categorySnapshot,
@@ -49,7 +47,7 @@ export async function saveFeeCalculation(
     safety_fee: result.safetyFee,
     total_fee: result.totalFee,
     change_fee: result.changeFee,
-    created_by: user.id,
+    created_by: profile.id,
   });
 
   if (error) {
@@ -64,8 +62,7 @@ export async function saveFeeCalculation(
 export async function applyFeeCalculationToPermit(
   payload: SaveFeeCalculationPayload,
 ): Promise<ActionResult> {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   if (!payload.permitRecordNo) {
     return { error: "반영할 허가 기록을 선택하세요.", success: false };
@@ -112,7 +109,7 @@ export async function applyFeeCalculationToPermit(
     .update({
       permit_fee: result.appliedPermitFee,
       safety_fee: result.appliedSafetyFee,
-      updated_by: user.id,
+      updated_by: profile.id,
     })
     .eq("record_no", payload.permitRecordNo);
 
@@ -131,7 +128,7 @@ export async function applyFeeCalculationToPermit(
     safety_fee: result.appliedSafetyFee,
     total_fee: result.appliedTotalFee,
     change_fee: result.changeFee,
-    created_by: user.id,
+    created_by: profile.id,
   });
 
   if (insertError) {

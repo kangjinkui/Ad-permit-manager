@@ -1,9 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export type UploadRow = {
   kind: string;
@@ -20,8 +19,7 @@ export type UploadRow = {
 };
 
 export async function bulkCreatePermits(rows: UploadRow[]) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   if (!rows.length) return { error: "데이터가 없습니다." };
 
@@ -59,7 +57,7 @@ export async function bulkCreatePermits(rows: UploadRow[]) {
       safety_check: row.safetyCheck,
       renewal_target: row.renewalTarget,
       source_type: "excel",
-      created_by: user.id,
+      created_by: profile.id,
     });
 
     if (error) {
@@ -69,7 +67,7 @@ export async function bulkCreatePermits(rows: UploadRow[]) {
         permit_no: recordNo,
         from_status: null,
         to_status: row.status,
-        changed_by: user.id,
+        changed_by: profile.id,
         note: "엑셀 업로드",
       });
     }

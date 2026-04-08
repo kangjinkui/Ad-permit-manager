@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export async function bulkDeletePermits(permitIds: string[]) {
-  await requireAdmin();
+  await requireStaff();
   if (permitIds.length === 0) return { error: null };
 
   const supabase = await createClient();

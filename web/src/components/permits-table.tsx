@@ -4,10 +4,10 @@ import { PermitsTableClient } from "@/components/permits-table-client";
 
 type Props = {
   searchParams?: PermitFilters;
-  isAdmin?: boolean;
+  canDelete?: boolean;
 };
 
-export async function PermitsTable({ searchParams = {}, isAdmin = false }: Props) {
+export async function PermitsTable({ searchParams = {}, canDelete = false }: Props) {
   const [permits, staffList] = await Promise.all([
     getPermits(searchParams),
     getStaffList(),
@@ -37,7 +37,7 @@ export async function PermitsTable({ searchParams = {}, isAdmin = false }: Props
         <PermitsFilter defaultValues={searchParams} staffList={staffList} />
       </div>
 
-      <PermitsTableClient permits={permits} isAdmin={isAdmin} />
+      <PermitsTableClient permits={permits} canDelete={canDelete} />
     </div>
   );
 }

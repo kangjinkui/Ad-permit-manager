@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { approveUser, rejectUser, changeRole } from "./actions";
+import { approveUser, rejectUser } from "./actions";
 
 type StatusFilter = "all" | "pending" | "active" | "rejected";
 
@@ -59,7 +59,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           사용자 관리
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          가입 요청을 승인하거나 거절하고, 역할을 변경합니다.
+          가입 요청을 승인하거나 거절하는 사용자 관리 전용 화면입니다.
         </p>
       </div>
 
@@ -197,31 +197,6 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                               비활성화
                             </button>
                           </form>
-                          {user.role === "staff" ? (
-                            <form
-                              action={changeRole.bind(null, user.id, "admin")}
-                              className="inline"
-                            >
-                              <button
-                                type="submit"
-                                className="rounded-xl border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-50"
-                              >
-                                관리자 지정
-                              </button>
-                            </form>
-                          ) : (
-                            <form
-                              action={changeRole.bind(null, user.id, "staff")}
-                              className="inline"
-                            >
-                              <button
-                                type="submit"
-                                className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
-                              >
-                                일반으로 변경
-                              </button>
-                            </form>
-                          )}
                         </>
                       )}
                       {user.status === "rejected" && (

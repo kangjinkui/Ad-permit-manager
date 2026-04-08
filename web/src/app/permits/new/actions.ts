@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireUser } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 function padded(n: number) {
   return String(n).padStart(3, "0");
@@ -29,8 +29,7 @@ async function generateRecordNo(
 }
 
 export async function createPermit(formData: FormData) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   const advertiser = formData.get("advertiser")?.toString().trim() ?? "";
   const kind = formData.get("kind")?.toString() ?? "";
@@ -66,7 +65,7 @@ export async function createPermit(formData: FormData) {
     safety_check: safetyCheck,
     renewal_target: renewalTarget,
     source_type: "manual",
-    created_by: user.id,
+    created_by: profile.id,
   });
 
   if (insertError) {
@@ -77,7 +76,7 @@ export async function createPermit(formData: FormData) {
     permit_no: recordNo,
     from_status: null,
     to_status: status,
-    changed_by: user.id,
+    changed_by: profile.id,
     note: "신규 등록",
   });
 

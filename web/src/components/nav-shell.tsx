@@ -16,12 +16,10 @@ export function NavShell({
   pathname: string;
   profile: Profile | null;
 }) {
-  const navItems = [
-    ...baseNavItems,
-    ...(profile?.role === "admin"
+  const navItems =
+    profile?.role === "admin"
       ? [{ href: "/admin/users", label: "사용자 관리" }]
-      : []),
-  ];
+      : baseNavItems;
 
   return (
     <aside className="panel-dark flex flex-col gap-6 p-5">

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { NavShell } from "@/components/nav-shell";
 import { AuthStatus } from "@/components/auth-status";
-import { getProfile } from "@/lib/auth";
+import { getProfile, requireStaff } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getPermit, getPermitHistory } from "@/lib/permits";
 import { permitStatuses, permitKinds, permitCategories } from "@/lib/mock-data";
@@ -26,7 +26,7 @@ const statusTone: Record<string, string> = {
 export default async function PermitDetailPage({ params }: PageProps) {
   const { id } = await params;
   const envReady = hasSupabaseEnv();
-  const profile = await getProfile();
+  const profile = envReady ? await requireStaff() : await getProfile();
 
   const [permit, history] = await Promise.all([
     getPermit(id),
@@ -216,7 +216,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
         </article>
 
         {/* 삭제 — admin 전용 */}
-        {profile?.role === "admin" && (
+        {profile && (
           <article className="panel flex items-center justify-between gap-4">
             <div>
               <p className="eyebrow">Danger Zone</p>

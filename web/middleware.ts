@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { hasSupabaseEnv } from "./src/lib/env";
 
-const protectedPrefixes = ["/dashboard", "/permits", "/admin"];
+const staffProtectedPrefixes = ["/dashboard", "/permits", "/fees"];
+const adminProtectedPrefixes = ["/admin"];
 const authPrefixes = ["/login", "/register"];
 
 export async function middleware(request: NextRequest) {
@@ -39,7 +40,13 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
+  const isStaffProtected = staffProtectedPrefixes.some((p) =>
+    pathname.startsWith(p),
+  );
+  const isAdminProtected = adminProtectedPrefixes.some((p) =>
+    pathname.startsWith(p),
+  );
+  const isProtected = isStaffProtected || isAdminProtected;
   const isAuthPage = authPrefixes.some((p) => pathname.startsWith(p));
   const isPendingPage = pathname === "/login/pending";
 
@@ -81,7 +88,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // admin 전용 경로: staff 차단
-    if (pathname.startsWith("/admin") && role !== "admin") {
+    if (isAdminProtected && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);
@@ -109,6 +116,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/fees/:path*",
     "/permits/:path*",
     "/admin/:path*",
     "/login",

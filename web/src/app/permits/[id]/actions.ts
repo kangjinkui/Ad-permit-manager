@@ -3,11 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireUser, requireAdmin } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 export async function updateStatus(formData: FormData) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   const permitNo = formData.get("permit_id")?.toString() ?? "";
   const newStatus = formData.get("new_status")?.toString() ?? "";
@@ -34,7 +33,7 @@ export async function updateStatus(formData: FormData) {
     permit_no: permitNo,
     from_status: fromStatus,
     to_status: newStatus,
-    changed_by: user.id,
+    changed_by: profile.id,
     note,
   });
   if (histError) console.error("history insert error:", histError.message);
@@ -45,8 +44,7 @@ export async function updateStatus(formData: FormData) {
 }
 
 export async function updatePermit(formData: FormData) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   const permitNo = formData.get("permit_id")?.toString() ?? "";
   if (!permitNo) return;
@@ -67,7 +65,7 @@ export async function updatePermit(formData: FormData) {
       renewal_target: formData.get("renewal_target")?.toString(),
       permit_fee: formData.get("permit_fee") ? Number(formData.get("permit_fee")) : null,
       safety_fee: formData.get("safety_fee") ? Number(formData.get("safety_fee")) : null,
-      updated_by: user.id,
+      updated_by: profile.id,
     })
     .eq("record_no", permitNo);
 
@@ -82,8 +80,7 @@ export async function updatePermit(formData: FormData) {
 }
 
 export async function updateNotes(formData: FormData) {
-  const user = await requireUser();
-  if (!user) redirect("/login");
+  const profile = await requireStaff();
 
   const permitNo = formData.get("permit_id")?.toString() ?? "";
   const notes = formData.get("notes")?.toString().trim() || null;
@@ -92,14 +89,14 @@ export async function updateNotes(formData: FormData) {
   const supabase = await createClient();
   await supabase
     .from("permit_records")
-    .update({ notes, updated_by: user.id })
+    .update({ notes, updated_by: profile.id })
     .eq("record_no", permitNo);
 
   revalidatePath(`/permits/${permitNo}`);
 }
 
 export async function deletePermit(formData: FormData) {
-  await requireAdmin();
+  await requireStaff();
 
   const permitNo = formData.get("permit_id")?.toString() ?? "";
   if (!permitNo) return;

@@ -2,25 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import type { PermitWithStaff } from "@/lib/permits";
 import { bulkDeletePermits } from "@/app/permits/actions";
+import type { PermitWithStaff } from "@/lib/permits";
 
 const statusTone: Record<string, string> = {
-  직접방문수령: "bg-emerald-100 text-emerald-700",
+  소심의상정예정: "bg-violet-100 text-violet-700",
+  연장고지서및안전점검의뢰: "bg-cyan-100 text-cyan-700",
   우편발송예정: "bg-amber-100 text-amber-800",
-  내용보완: "bg-rose-100 text-rose-700",
+  보완요청: "bg-rose-100 text-rose-700",
   공문발송: "bg-sky-100 text-sky-700",
-  "서울시심의 상정예정": "bg-violet-100 text-violet-700",
-  이메일발송완료: "bg-cyan-100 text-cyan-700",
   접수: "bg-slate-100 text-slate-700",
+  직접방문수령: "bg-emerald-100 text-emerald-700",
 };
 
 type Props = {
   permits: PermitWithStaff[];
-  isAdmin: boolean;
+  canDelete: boolean;
 };
 
-export function PermitsTableClient({ permits, isAdmin }: Props) {
+export function PermitsTableClient({ permits, canDelete }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
@@ -31,16 +31,20 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
   function toggleAll() {
     if (allChecked) {
       setSelected(new Set());
-    } else {
-      setSelected(new Set(permits.map((p) => p.id)));
+      return;
     }
+
+    setSelected(new Set(permits.map((permit) => permit.id)));
   }
 
   function toggleOne(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
@@ -48,22 +52,27 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
   function handleBulkDelete() {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    if (!confirm(`선택한 ${ids.length}건을 삭제하시겠습니까?\n이력을 포함한 모든 데이터가 영구 삭제됩니다.`)) return;
+
+    const confirmed = confirm(
+      `선택한 ${ids.length}건을 삭제하시겠습니까?\n이력까지 포함된 모든 데이터가 영구 삭제됩니다.`,
+    );
+    if (!confirmed) return;
 
     startTransition(async () => {
       const result = await bulkDeletePermits(ids);
       if (result?.error) {
-        alert("삭제 중 오류가 발생했습니다: " + result.error);
-      } else {
-        setSelected(new Set());
-        router.refresh();
+        alert(`삭제 중 오류가 발생했습니다: ${result.error}`);
+        return;
       }
+
+      setSelected(new Set());
+      router.refresh();
     });
   }
 
   return (
     <>
-      {isAdmin && selected.size > 0 && (
+      {canDelete && selected.size > 0 && (
         <div className="mt-4 flex items-center gap-3">
           <span className="text-sm text-slate-600">{selected.size}건 선택됨</span>
           <button
@@ -71,7 +80,7 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
             disabled={isPending}
             className="rounded-[20px] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
           >
-            {isPending ? "삭제 중…" : "선택 삭제"}
+            {isPending ? "삭제 중..." : "선택 삭제"}
           </button>
           <button
             onClick={() => setSelected(new Set())}
@@ -86,12 +95,14 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
         <table className="w-full border-collapse">
           <thead className="bg-slate-50 text-left text-sm text-slate-500">
             <tr>
-              {isAdmin && (
-                <th className="px-4 py-3 w-10">
+              {canDelete && (
+                <th className="w-10 px-4 py-3">
                   <input
                     type="checkbox"
                     checked={allChecked}
-                    ref={(el) => { if (el) el.indeterminate = someChecked; }}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someChecked;
+                    }}
                     onChange={toggleAll}
                     className="h-4 w-4 rounded border-slate-300 accent-slate-800"
                   />
@@ -102,14 +113,13 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
               <th className="px-4 py-3 font-medium">상태</th>
               <th className="px-4 py-3 font-medium">안전점검</th>
               <th className="px-4 py-3 font-medium">담당자</th>
-              <th className="px-4 py-3 font-medium">원본</th>
             </tr>
           </thead>
           <tbody>
             {permits.length === 0 ? (
               <tr>
                 <td
-                  colSpan={isAdmin ? 7 : 6}
+                  colSpan={canDelete ? 6 : 5}
                   className="px-4 py-10 text-center text-sm text-slate-400"
                 >
                   조건에 맞는 항목이 없습니다.
@@ -124,9 +134,9 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
                     if (target.tagName === "INPUT") return;
                     router.push(`/permits/${item.id}`);
                   }}
-                  className="border-t border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
+                  className="cursor-pointer border-t border-slate-200 bg-white hover:bg-slate-50"
                 >
-                  {isAdmin && (
+                  {canDelete && (
                     <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
@@ -146,7 +156,7 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
                   <td className="px-4 py-4">
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        statusTone[item.status] ?? "bg-slate-100 text-slate-700"
+                        statusTone[item.status.replace(/\s/g, "")] ?? "bg-slate-100 text-slate-700"
                       }`}
                     >
                       {item.status}
@@ -154,7 +164,6 @@ export function PermitsTableClient({ permits, isAdmin }: Props) {
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">{item.safetyCheck}</td>
                   <td className="px-4 py-4 text-sm text-slate-700">{item.staffName ?? "-"}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{item.sourceType}</td>
                 </tr>
               ))
             )}
