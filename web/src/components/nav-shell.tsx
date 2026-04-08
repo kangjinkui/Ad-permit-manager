@@ -70,6 +70,15 @@ export function NavShell({
         >
           광고물 판정기 ↗
         </a>
+        <a
+          href="https://notebooklm.google.com/notebook/f5fddab6-61bd-496b-90e2-19e21f2fe1a5"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-2xl px-4 py-3 text-base font-semibold transition"
+          style={{ color: "#ffffff", background: "rgba(255, 255, 255, 0.12)" }}
+        >
+          광고물 해설집 ↗
+        </a>
       </div>
 
       <div className="mt-auto flex flex-col gap-3">
