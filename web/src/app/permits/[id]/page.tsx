@@ -12,6 +12,7 @@ import { FormWithToast } from "@/components/form-with-toast";
 
 type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | undefined>>;
 };
 
 const statusTone: Record<string, string> = {
@@ -23,8 +24,10 @@ const statusTone: Record<string, string> = {
   이메일발송완료: "bg-cyan-100 text-cyan-700",
 };
 
-export default async function PermitDetailPage({ params }: PageProps) {
+export default async function PermitDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const backHref = sp.from ? decodeURIComponent(sp.from) : "/permits";
   const envReady = hasSupabaseEnv();
   const profile = envReady ? await requireStaff() : await getProfile();
 
@@ -44,7 +47,7 @@ export default async function PermitDetailPage({ params }: PageProps) {
         {/* 헤더 */}
         <div className="flex items-center gap-4">
           <Link
-            href="/permits"
+            href={backHref}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 active:scale-95 transition-all"
           >
             ← 목록으로

@@ -20,7 +20,10 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:github.com)",
-      "Bash(find /c/Users/user/dev/Ad-permit-manager -maxdepth 3 -type f -name *.tsx)"
+      "Bash(find /c/Users/user/dev/Ad-permit-manager -maxdepth 3 -type f -name *.tsx)",
+      "Bash(docker compose up:*)",
+      "Bash(docker exec ad-permit-manager-web:*)",
+      "Bash(docker restart ad-permit-manager-web:*)"
     ]
   }
 }

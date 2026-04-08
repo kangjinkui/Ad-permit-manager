@@ -18,7 +18,7 @@ export function NavShell({
 }) {
   const navItems =
     profile?.role === "admin"
-      ? [{ href: "/admin/users", label: "사용자 관리" }]
+      ? [...baseNavItems, { href: "/admin/users", label: "사용자 관리" }]
       : baseNavItems;
 
   return (
@@ -56,6 +56,21 @@ export function NavShell({
           );
         })}
       </nav>
+
+      <div className="flex flex-col gap-2">
+        <p className="px-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          외부 도구
+        </p>
+        <a
+          href="https://signcheck.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-2xl px-4 py-3 text-base font-semibold transition"
+          style={{ color: "#ffffff", background: "rgba(255, 255, 255, 0.12)" }}
+        >
+          광고물 판정기 ↗
+        </a>
+      </div>
 
       <div className="mt-auto flex flex-col gap-3">
         {profile ? (

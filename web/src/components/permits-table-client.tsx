@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { bulkDeletePermits } from "@/app/permits/actions";
 import type { PermitWithStaff } from "@/lib/permits";
@@ -20,21 +20,42 @@ type Props = {
   canDelete: boolean;
 };
 
+const PAGE_SIZE = 10;
+
 export function PermitsTableClient({ permits, canDelete }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const [page, setPage] = useState(1);
 
-  const allChecked = permits.length > 0 && selected.size === permits.length;
-  const someChecked = selected.size > 0 && !allChecked;
+  const totalPages = Math.max(1, Math.ceil(permits.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagePermits = permits.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const allChecked = pagePermits.length > 0 && pagePermits.every((p) => selected.has(p.id));
+  const someChecked = pagePermits.some((p) => selected.has(p.id)) && !allChecked;
 
   function toggleAll() {
     if (allChecked) {
-      setSelected(new Set());
+      setSelected((prev) => {
+        const next = new Set(prev);
+        pagePermits.forEach((p) => next.delete(p.id));
+        return next;
+      });
       return;
     }
 
-    setSelected(new Set(permits.map((permit) => permit.id)));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      pagePermits.forEach((p) => next.add(p.id));
+      return next;
+    });
+  }
+
+  function handlePageChange(p: number) {
+    setPage(p);
+    setSelected(new Set());
   }
 
   function toggleOne(id: string) {
@@ -116,7 +137,7 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
             </tr>
           </thead>
           <tbody>
-            {permits.length === 0 ? (
+            {pagePermits.length === 0 ? (
               <tr>
                 <td
                   colSpan={canDelete ? 6 : 5}
@@ -126,13 +147,15 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
                 </td>
               </tr>
             ) : (
-              permits.map((item) => (
+              pagePermits.map((item) => (
                 <tr
                   key={item.id}
                   onClick={(e) => {
                     const target = e.target as HTMLElement;
                     if (target.tagName === "INPUT") return;
-                    router.push(`/permits/${item.id}`);
+                    const qs = searchParams.toString();
+                    const from = encodeURIComponent("/permits" + (qs ? "?" + qs : ""));
+                    router.push(`/permits/${item.id}?from=${from}`);
                   }}
                   className="cursor-pointer border-t border-slate-200 bg-white hover:bg-slate-50"
                 >
@@ -170,6 +193,44 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+          <span>
+            {(currentPage - 1) * PAGE_SIZE + 1}–
+            {Math.min(currentPage * PAGE_SIZE, permits.length)} / 총 {permits.length}건
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="rounded-[8px] border border-slate-200 px-3 py-1.5 hover:bg-slate-50 disabled:opacity-40"
+            >
+              이전
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => handlePageChange(p)}
+                className={`rounded-[8px] border px-3 py-1.5 ${
+                  p === currentPage
+                    ? "border-slate-800 bg-slate-800 text-white"
+                    : "border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="rounded-[8px] border border-slate-200 px-3 py-1.5 hover:bg-slate-50 disabled:opacity-40"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
