@@ -37,6 +37,9 @@ export type PermitRecord = {
   sourceType: "excel" | "manual";
   permitFee: number | null;
   safetyFee: number | null;
+  width: number | null;
+  height: number | null;
+  lighting: "비조명" | "내부조명" | "외부조명" | null;
 };
 
 export const mockPermits: PermitRecord[] = [
@@ -56,6 +59,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "excel",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
   {
     id: "PM-2026-002",
@@ -73,6 +79,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "manual",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
   {
     id: "PM-2026-003",
@@ -90,6 +99,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "excel",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
   {
     id: "PM-2026-004",
@@ -107,6 +119,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "manual",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
   {
     id: "PM-2026-005",
@@ -124,6 +139,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "manual",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
   {
     id: "PM-2026-006",
@@ -141,6 +159,9 @@ export const mockPermits: PermitRecord[] = [
     sourceType: "manual",
     permitFee: null,
     safetyFee: null,
+    width: null,
+    height: null,
+    lighting: null,
   },
 ];
 

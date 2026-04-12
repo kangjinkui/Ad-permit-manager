@@ -24,3 +24,12 @@ pnpm-debug.log*
 
 .DS_Store
 Thumbs.db
+
+# 문서 서식 파일 (한글, PDF, 엑셀)
+*.hwp
+*.hwpx
+*.pdf
+*.xls
+*.xlsx
+*.xlsm
+web/public/templates/

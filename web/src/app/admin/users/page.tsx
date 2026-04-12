@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { approveUser, rejectUser } from "./actions";
+import { approveUser, rejectUser, updateUserTitle } from "./actions";
 
 type StatusFilter = "all" | "pending" | "active" | "rejected";
 
@@ -36,7 +36,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const supabase = await createClient();
   let query = supabase
     .from("profiles")
-    .select("id, name, email, role, status, department, created_at")
+    .select("id, name, email, role, status, department, title, created_at")
     .order("created_at", { ascending: false });
 
   if (filter !== "all") {
@@ -94,6 +94,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 이름
               </th>
               <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                직급
+              </th>
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
                 이메일
               </th>
               <th className="px-5 py-3 text-left font-semibold text-slate-600">
@@ -114,7 +117,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             {!users || users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-5 py-8 text-center text-slate-400"
                 >
                   해당하는 사용자가 없습니다.
@@ -125,6 +128,31 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 <tr key={user.id} className="hover:bg-slate-50">
                   <td className="px-5 py-4 font-medium text-slate-900">
                     {user.name}
+                  </td>
+                  <td className="px-5 py-4">
+                    <form
+                      action={async (formData: FormData) => {
+                        "use server";
+                        await updateUserTitle(
+                          user.id,
+                          formData.get("title") as string ?? ""
+                        );
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      <input
+                        name="title"
+                        defaultValue={user.title ?? ""}
+                        placeholder="직급 입력"
+                        className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
+                      >
+                        저장
+                      </button>
+                    </form>
                   </td>
                   <td className="px-5 py-4 text-slate-600">{user.email}</td>
                   <td className="px-5 py-4">

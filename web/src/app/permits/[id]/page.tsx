@@ -157,6 +157,40 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
                   placeholder="0"
                 />
               </label>
+
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                광고물 가로 (M)
+                <input
+                  name="width"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="field"
+                  defaultValue={permit.width ?? ""}
+                  placeholder="예: 0.96"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                광고물 세로 (M)
+                <input
+                  name="height"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="field"
+                  defaultValue={permit.height ?? ""}
+                  placeholder="예: 1.83"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                조명
+                <select name="lighting" className="field" defaultValue={permit.lighting ?? ""}>
+                  <option value="">선택 안 함</option>
+                  <option value="비조명">비조명</option>
+                  <option value="내부조명">내부조명</option>
+                  <option value="외부조명">외부조명</option>
+                </select>
+              </label>
             </div>
 
             <div className="mt-6 flex gap-3">

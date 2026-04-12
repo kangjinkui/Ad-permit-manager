@@ -23,7 +23,16 @@
       "Bash(find /c/Users/user/dev/Ad-permit-manager -maxdepth 3 -type f -name *.tsx)",
       "Bash(docker compose up:*)",
       "Bash(docker exec ad-permit-manager-web:*)",
-      "Bash(docker restart ad-permit-manager-web:*)"
+      "Bash(docker restart ad-permit-manager-web:*)",
+      "Bash(find C:\\\\Users\\\\user\\\\dev\\\\Ad-permit-manager:*)",
+      "Bash(node -e ':*)",
+      "Bash(unzip -l \"web/public/templates/deliberation_template.hwpx\")",
+      "Bash(unzip -p \"web/public/templates/deliberation_template.hwpx\" \"Contents/section0.xml\")",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(python:*)",
+      "Bash(docker build:*)"
     ]
   }
 }

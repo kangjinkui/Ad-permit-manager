@@ -23,10 +23,13 @@ type PermitRow = {
   notes: string | null;
   permit_fee: number | null;
   safety_fee: number | null;
-  profiles: { name: string } | { name: string }[] | null;
+  width: number | null;
+  height: number | null;
+  lighting: string | null;
+  profiles: { name: string; title: string | null } | { name: string; title: string | null }[] | null;
 };
 
-export type PermitWithStaff = PermitRecord & { staffName: string | null; notes: string | null };
+export type PermitWithStaff = PermitRecord & { staffName: string | null; staffTitle: string | null; notes: string | null };
 
 function toPermitWithStaff(row: PermitRow): PermitWithStaff {
   return {
@@ -46,9 +49,15 @@ function toPermitWithStaff(row: PermitRow): PermitWithStaff {
     staffName: Array.isArray(row.profiles)
       ? (row.profiles[0]?.name ?? null)
       : (row.profiles?.name ?? null),
+    staffTitle: Array.isArray(row.profiles)
+      ? (row.profiles[0]?.title ?? null)
+      : (row.profiles?.title ?? null),
     notes: row.notes ?? null,
     permitFee: row.permit_fee ?? null,
     safetyFee: row.safety_fee ?? null,
+    width: row.width ?? null,
+    height: row.height ?? null,
+    lighting: (row.lighting ?? null) as PermitRecord["lighting"],
   };
 }
 
@@ -79,7 +88,7 @@ export async function getPermits(
   let query = supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, profiles!created_by(name)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, profiles!created_by(name,title)",
     )
     .order("created_at", { ascending: false });
 
@@ -116,7 +125,7 @@ export async function getPermit(recordNo: string): Promise<PermitWithStaff | nul
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, profiles!created_by(name)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, profiles!created_by(name,title)",
     )
     .eq("record_no", recordNo)
     .single();

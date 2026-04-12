@@ -4,6 +4,18 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
+export async function updateUserTitle(userId: string, title: string) {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ title: title.trim() || null })
+    .eq("id", userId);
+
+  revalidatePath("/admin/users");
+}
+
 export async function approveUser(userId: string) {
   await requireAdmin();
 
