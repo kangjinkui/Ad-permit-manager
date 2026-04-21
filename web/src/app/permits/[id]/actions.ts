@@ -68,6 +68,7 @@ export async function updatePermit(formData: FormData) {
       width: formData.get("width") ? Number(formData.get("width")) : null,
       height: formData.get("height") ? Number(formData.get("height")) : null,
       lighting: formData.get("lighting")?.toString() || null,
+      review_opinion: formData.get("review_opinion")?.toString().trim() || null,
       updated_by: profile.id,
     })
     .eq("record_no", permitNo);

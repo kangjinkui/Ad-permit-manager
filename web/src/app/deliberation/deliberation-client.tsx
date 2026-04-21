@@ -149,6 +149,10 @@ export function DeliberationClient({ permits, envReady }: Props) {
         </label>
       </div>
 
+      <p className="mt-3 text-xs text-slate-500">
+        ※ 규격·조명·담당자 검토의견은 각 허가 건 상세 페이지에서 입력하세요.
+      </p>
+
       {/* 허가 목록 */}
       <div className="mt-6">
         {permits.length === 0 ? (

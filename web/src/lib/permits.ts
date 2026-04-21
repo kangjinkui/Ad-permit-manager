@@ -26,10 +26,11 @@ type PermitRow = {
   width: number | null;
   height: number | null;
   lighting: string | null;
+  review_opinion: string | null;
   profiles: { name: string; title: string | null } | { name: string; title: string | null }[] | null;
 };
 
-export type PermitWithStaff = PermitRecord & { staffName: string | null; staffTitle: string | null; notes: string | null };
+export type PermitWithStaff = PermitRecord & { staffName: string | null; staffTitle: string | null; notes: string | null; reviewOpinion: string | null };
 
 function toPermitWithStaff(row: PermitRow): PermitWithStaff {
   return {
@@ -58,6 +59,7 @@ function toPermitWithStaff(row: PermitRow): PermitWithStaff {
     width: row.width ?? null,
     height: row.height ?? null,
     lighting: (row.lighting ?? null) as PermitRecord["lighting"],
+    reviewOpinion: row.review_opinion ?? null,
   };
 }
 
@@ -88,7 +90,7 @@ export async function getPermits(
   let query = supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, profiles!created_by(name,title)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, review_opinion, profiles!created_by(name,title)",
     )
     .order("created_at", { ascending: false });
 
@@ -125,7 +127,7 @@ export async function getPermit(recordNo: string): Promise<PermitWithStaff | nul
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, profiles!created_by(name,title)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, review_opinion, profiles!created_by(name,title)",
     )
     .eq("record_no", recordNo)
     .single();

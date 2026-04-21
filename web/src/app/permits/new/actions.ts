@@ -43,6 +43,10 @@ export async function createPermit(formData: FormData) {
   const safetyCheck = formData.get("safety_check")?.toString() ?? "확인필요";
   const renewalTarget =
     formData.get("renewal_target")?.toString() ?? "연장대상 아님";
+  const widthRaw = formData.get("width")?.toString();
+  const heightRaw = formData.get("height")?.toString();
+  const lighting = formData.get("lighting")?.toString() || null;
+  const reviewOpinion = formData.get("review_opinion")?.toString().trim() || null;
 
   if (!advertiser || !kind || !category || !place || !content || !status) {
     redirect("/permits/new?error=필수+항목을+모두+입력해+주세요");
@@ -66,6 +70,10 @@ export async function createPermit(formData: FormData) {
     renewal_target: renewalTarget,
     source_type: "manual",
     created_by: profile.id,
+    width: widthRaw ? Number(widthRaw) : null,
+    height: heightRaw ? Number(heightRaw) : null,
+    lighting,
+    review_opinion: reviewOpinion,
   });
 
   if (insertError) {

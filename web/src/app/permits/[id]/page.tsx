@@ -191,6 +191,22 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
                   <option value="외부조명">외부조명</option>
                 </select>
               </label>
+
+              {permit.status === "소심의 상정예정" && (
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
+                  담당자 검토의견
+                  <span className="text-xs font-normal text-slate-400">
+                    샘플: 서류검토 결과 옥외광고물 등 표시허가 관련 규정에 적합
+                  </span>
+                  <textarea
+                    name="review_opinion"
+                    rows={3}
+                    className="field resize-none"
+                    placeholder="서류검토 결과 옥외광고물 등 표시허가 관련 규정에 적합"
+                    defaultValue={permit.reviewOpinion ?? ""}
+                  />
+                </label>
+              )}
             </div>
 
             <div className="mt-6 flex gap-3">

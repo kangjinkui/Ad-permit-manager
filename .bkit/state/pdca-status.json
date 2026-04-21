@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T06:23:58.278Z",
+  "lastUpdated": "2026-04-21T02:13:33.480Z",
   "activeFeatures": [
     "web",
     "permits",
@@ -12,7 +12,9 @@
     "register",
     "pending",
     "admin",
-    "users"
+    "users",
+    "generate",
+    "deliberation"
   ],
   "primaryFeature": "web",
   "features": {
@@ -25,9 +27,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:26:49.355Z",
-        "lastUpdated": "2026-03-31T06:23:58.278Z"
+        "lastUpdated": "2026-04-21T02:12:04.033Z"
       },
-      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\lib\\mock-data.ts"
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\lib\\hwpx-generator.ts"
     },
     "permits": {
       "phase": "do",
@@ -64,7 +66,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:28:27.640Z",
-        "lastUpdated": "2026-03-30T07:54:58.033Z"
+        "lastUpdated": "2026-04-21T02:13:33.480Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\new\\actions.ts"
     },
@@ -77,7 +79,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:29:03.132Z",
-        "lastUpdated": "2026-03-31T06:23:45.177Z"
+        "lastUpdated": "2026-04-21T02:12:42.095Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\permits\\[id]\\page.tsx"
     },
@@ -158,6 +160,32 @@
         "lastUpdated": "2026-03-29T05:01:12.635Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\admin\\users\\page.tsx"
+    },
+    "generate": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-20T07:46:36.299Z",
+        "lastUpdated": "2026-04-21T02:12:11.392Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\api\\deliberation\\generate\\route.ts"
+    },
+    "deliberation": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-20T07:46:41.399Z",
+        "lastUpdated": "2026-04-21T02:12:28.144Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\deliberation\\deliberation-client.tsx"
     }
   },
   "pipeline": {
@@ -168,7 +196,7 @@
   "session": {
     "startedAt": "2026-03-27T01:12:32.946Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T06:23:58.278Z"
+    "lastActivity": "2026-04-21T02:13:33.480Z"
   },
   "history": [
     {
@@ -816,6 +844,174 @@
     {
       "timestamp": "2026-03-31T06:23:58.278Z",
       "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:14.189Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:19.566Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:25.353Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:36.299Z",
+      "feature": "generate",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:41.399Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:46.375Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T07:46:52.522Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:07:54.296Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:07:58.881Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:08:09.802Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:08:19.247Z",
+      "feature": "generate",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:08:24.944Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-20T08:08:34.064Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:11:43.957Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:11:47.655Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:11:51.359Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:11:55.756Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:04.033Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:11.392Z",
+      "feature": "generate",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:16.403Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:20.103Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:28.144Z",
+      "feature": "deliberation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:32.892Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:12:42.095Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:13:05.794Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:13:11.414Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:13:24.128Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-21T02:13:33.480Z",
+      "feature": "new",
       "phase": "do",
       "action": "updated"
     }

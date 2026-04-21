@@ -32,7 +32,10 @@
       "Bash(docker-compose up:*)",
       "Bash(python3 -c ':*)",
       "Bash(python:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(docker compose *)"
     ]
   }
 }

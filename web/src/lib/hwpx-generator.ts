@@ -65,7 +65,7 @@ function escapeXml(str: string): string {
 export async function generateDeliberationHwpx(
   permit: PermitWithStaff,
   committeeNo: number,
-  hearingDateOverride?: string | null
+  hearingDateOverride?: string | null,
 ): Promise<Buffer> {
   // 템플릿 읽기
   const templateBuffer = await fs.readFile(TEMPLATE_PATH);
@@ -131,8 +131,8 @@ export async function generateDeliberationHwpx(
   parts[24] = insertTextIntoEmptyCell(parts[24], permit.content);
 
   // 셀 26: 광고물 규격
-  const widthStr = permit.width != null ? String(permit.width) : "?";
-  const heightStr = permit.height != null ? String(permit.height) : "?";
+  const widthStr = String(permit.width ?? "?");
+  const heightStr = String(permit.height ?? "?");
   parts[26] = parts[26].replace(
     /<hp:t>가로\([^)]+\)\*세로\([^)]+\)<\/hp:t>/,
     `<hp:t>가로(${widthStr}M)*세로(${heightStr}M)</hp:t>`
@@ -146,6 +146,11 @@ export async function generateDeliberationHwpx(
     );
   }
 
+  // 셀 33: 담당자 검토의견
+  if (permit.reviewOpinion) {
+    parts[33] = insertTextIntoEmptyCell(parts[33], permit.reviewOpinion);
+  }
+
   // 셀 30: 직급 및 담당자명 치환 ("직급 사무 6급" → staffTitle, "○○○" → staffName)
   if (permit.staffTitle) {
     parts[30] = parts[30].replace(/직급 사무 6급/g, escapeXml(permit.staffTitle));
@@ -156,10 +161,10 @@ export async function generateDeliberationHwpx(
     parts[30] = parts[30].replace(/○○○/g, escapeXml(permit.staffName));
   }
 
-  // 셀 60: 마지막 날짜
+  // 셀 60: 마지막 날짜 (템플릿에서 날짜가 별도 <hp:t>로 분리되어 있음)
   parts[60] = parts[60].replace(
-    /위와 같이 심의 의결합니다\. \d{4}\. \d+\. \d+\./,
-    `위와 같이 심의 의결합니다. ${year}. ${month}. ${day}.`
+    /(<hp:t>)\d{4}\. \d+\. \d+\.(<\/hp:t>)/,
+    `$1${year}. ${month}. ${day}.$2`
   );
 
   xml = parts.join(SEPARATOR);
