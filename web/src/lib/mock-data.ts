@@ -7,6 +7,7 @@ export type PermitStatus =
   | "소심의 상정예정"
   | "연장고지서 및 안전점검의뢰"
   | "우편발송예정"
+  | "이메일 발송예정"
   | "이메일 발송완료"
   | "직접방문수령";
 
@@ -19,7 +20,7 @@ export type PermitKind =
   | "공공시설물이용 광고물"
   | "교통수단이용 광고물";
 
-export type PermitCategory = "신규" | "연장" | "내용변경";
+export type PermitCategory = "신규" | "연장" | "내용변경" | "관리자변경";
 
 export type PermitRecord = {
   id: string;
@@ -174,6 +175,7 @@ export const permitStatuses: PermitStatus[] = [
   "소심의 상정예정",
   "연장고지서 및 안전점검의뢰",
   "우편발송예정",
+  "이메일 발송예정",
   "이메일 발송완료",
   "직접방문수령",
 ];
@@ -188,4 +190,4 @@ export const permitKinds: PermitKind[] = [
   "교통수단이용 광고물",
 ];
 
-export const permitCategories: PermitCategory[] = ["신규", "연장", "내용변경"];
+export const permitCategories: PermitCategory[] = ["신규", "연장", "내용변경", "관리자변경"];
