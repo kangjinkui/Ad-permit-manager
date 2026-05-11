@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
+import { getPermitSpecificationPayload } from "@/lib/sign-faces";
 
 export async function updateStatus(formData: FormData) {
   const profile = await requireStaff();
@@ -50,6 +51,7 @@ export async function updatePermit(formData: FormData) {
   if (!permitNo) return;
 
   const supabase = await createClient();
+  const specification = getPermitSpecificationPayload(formData);
   const { error } = await supabase
     .from("permit_records")
     .update({
@@ -65,9 +67,10 @@ export async function updatePermit(formData: FormData) {
       renewal_target: formData.get("renewal_target")?.toString(),
       permit_fee: formData.get("permit_fee") ? Number(formData.get("permit_fee")) : null,
       safety_fee: formData.get("safety_fee") ? Number(formData.get("safety_fee")) : null,
-      width: formData.get("width") ? Number(formData.get("width")) : null,
-      height: formData.get("height") ? Number(formData.get("height")) : null,
-      lighting: formData.get("lighting")?.toString() || null,
+      width: specification.width,
+      height: specification.height,
+      lighting: specification.lighting,
+      sign_faces: specification.sign_faces,
       review_opinion: formData.get("review_opinion")?.toString().trim() || null,
       updated_by: profile.id,
     })

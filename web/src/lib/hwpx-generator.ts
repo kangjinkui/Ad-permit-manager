@@ -14,6 +14,7 @@ const KIND_TO_CHECK_CELL: Record<PermitKind, number> = {
   "입간판": 18,
   "지주간판": 18,
   "옥상간판": 17,
+  "현수막게시틀": 16,
   "공공시설물이용 광고물": 18,
   "교통수단이용 광고물": 18,
 };
@@ -60,6 +61,34 @@ function escapeXml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+function formatMeter(value: number | null): string {
+  return value == null ? "?" : String(value);
+}
+
+function formatSpecificationText(permit: PermitWithStaff): string {
+  if (permit.signFaces?.length) {
+    return permit.signFaces
+      .map(
+        (face, index) =>
+          `${index + 1}면 가로(${formatMeter(face.width)}M)*세로(${formatMeter(face.height)}M)`,
+      )
+      .join(", ");
+  }
+
+  return `가로(${formatMeter(permit.width)}M)*세로(${formatMeter(permit.height)}M)`;
+}
+
+function formatLightingText(permit: PermitWithStaff): string | null {
+  if (permit.signFaces?.length) {
+    const values = permit.signFaces
+      .map((face, index) => face.lighting ? `${index + 1}면 ${face.lighting}` : null)
+      .filter((value): value is string => Boolean(value));
+    return values.length > 0 ? values.join(", ") : null;
+  }
+
+  return permit.lighting;
 }
 
 export async function generateDeliberationHwpx(
@@ -131,18 +160,17 @@ export async function generateDeliberationHwpx(
   parts[24] = insertTextIntoEmptyCell(parts[24], permit.content);
 
   // 셀 26: 광고물 규격
-  const widthStr = String(permit.width ?? "?");
-  const heightStr = String(permit.height ?? "?");
   parts[26] = parts[26].replace(
     /<hp:t>가로\([^)]+\)\*세로\([^)]+\)<\/hp:t>/,
-    `<hp:t>가로(${widthStr}M)*세로(${heightStr}M)</hp:t>`
+    `<hp:t>${escapeXml(formatSpecificationText(permit))}</hp:t>`
   );
 
   // 셀 28: 조명
-  if (permit.lighting) {
+  const lightingText = formatLightingText(permit);
+  if (lightingText) {
     parts[28] = parts[28].replace(
       /<hp:t>내부조명<\/hp:t>/,
-      `<hp:t>${escapeXml(permit.lighting)}</hp:t>`
+      `<hp:t>${escapeXml(lightingText)}</hp:t>`
     );
   }
 

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { permitCategories, permitKinds, permitStatuses } from "@/lib/mock-data";
+import { SignSpecificationFields } from "@/components/sign-specification-fields";
+import { permitCategories, permitStatuses } from "@/lib/mock-data";
 import { createPermit } from "./actions";
 
 const REVIEW_OPINION_SAMPLE = "서류검토 결과 옥외광고물 등 표시허가 관련 규정에 적합";
@@ -41,14 +42,6 @@ export function NewPermitForm({ envReady, error }: Props) {
           <input name="advertiser" className="field" placeholder="광고주명 입력" required />
         </label>
         <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-          종류 *
-          <select name="kind" className="field" required>
-            {permitKinds.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
           구분 *
           <select name="category" className="field" required>
             {permitCategories.map((item) => (
@@ -56,6 +49,7 @@ export function NewPermitForm({ envReady, error }: Props) {
             ))}
           </select>
         </label>
+        <SignSpecificationFields />
 
         <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
           표시장소 *
@@ -108,45 +102,6 @@ export function NewPermitForm({ envReady, error }: Props) {
             <option value="연장대상">연장대상</option>
           </select>
         </label>
-      </div>
-
-      {/* 광고물 규격·조명 */}
-      <div className="mt-6">
-        <p className="text-sm font-semibold text-slate-700">광고물 규격 및 조명</p>
-        <p className="mt-1 text-xs text-slate-400">소심의 의결서 생성에 사용됩니다.</p>
-        <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            가로 (M)
-            <input
-              name="width"
-              type="number"
-              min="0"
-              step="0.01"
-              className="field"
-              placeholder="예: 0.96"
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            세로 (M)
-            <input
-              name="height"
-              type="number"
-              min="0"
-              step="0.01"
-              className="field"
-              placeholder="예: 1.83"
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            조명
-            <select name="lighting" className="field">
-              <option value="">선택 안 함</option>
-              <option value="비조명">비조명</option>
-              <option value="내부조명">내부조명</option>
-              <option value="외부조명">외부조명</option>
-            </select>
-          </label>
-        </div>
       </div>
 
       {/* 소심의 상정예정 시 담당자 검토의견 */}

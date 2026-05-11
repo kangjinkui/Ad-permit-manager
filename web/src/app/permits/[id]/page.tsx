@@ -5,10 +5,11 @@ import { AuthStatus } from "@/components/auth-status";
 import { getProfile, requireStaff } from "@/lib/auth";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getPermit, getPermitHistory } from "@/lib/permits";
-import { permitStatuses, permitKinds, permitCategories } from "@/lib/mock-data";
+import { permitStatuses, permitCategories } from "@/lib/mock-data";
 import { updateStatus, updatePermit, updateNotes } from "./actions";
 import { DeleteButton } from "./delete-button";
 import { FormWithToast } from "@/components/form-with-toast";
+import { SignSpecificationFields } from "@/components/sign-specification-fields";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -83,17 +84,18 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
                 <input name="advertiser" className="field" defaultValue={permit.advertiser} required />
               </label>
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                종류 *
-                <select name="kind" className="field" defaultValue={permit.kind}>
-                  {permitKinds.map((k) => <option key={k}>{k}</option>)}
-                </select>
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 구분 *
                 <select name="category" className="field" defaultValue={permit.category}>
                   {permitCategories.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </label>
+              <SignSpecificationFields
+                defaultKind={permit.kind}
+                defaultWidth={permit.width}
+                defaultHeight={permit.height}
+                defaultLighting={permit.lighting}
+                defaultSignFaces={permit.signFaces}
+              />
 
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
                 표시장소 *
@@ -156,40 +158,6 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
                   defaultValue={permit.safetyFee ?? ""}
                   placeholder="0"
                 />
-              </label>
-
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                광고물 가로 (M)
-                <input
-                  name="width"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="field"
-                  defaultValue={permit.width ?? ""}
-                  placeholder="예: 0.96"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                광고물 세로 (M)
-                <input
-                  name="height"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="field"
-                  defaultValue={permit.height ?? ""}
-                  placeholder="예: 1.83"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                조명
-                <select name="lighting" className="field" defaultValue={permit.lighting ?? ""}>
-                  <option value="">선택 안 함</option>
-                  <option value="비조명">비조명</option>
-                  <option value="내부조명">내부조명</option>
-                  <option value="외부조명">외부조명</option>
-                </select>
               </label>
 
               {permit.status === "소심의 상정예정" && (

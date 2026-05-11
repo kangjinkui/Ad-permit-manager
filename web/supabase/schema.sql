@@ -10,6 +10,7 @@ create type public.permit_kind as enum (
   '입간판',
   '지주간판',
   '옥상간판',
+  '현수막게시틀',
   '공공시설물이용 광고물',
   '교통수단이용 광고물'
 );
@@ -63,6 +64,13 @@ create table if not exists public.permit_records (
   renewal_target public.renewal_target_status not null default '연장대상 아님',
   phone          text,
   notes          text,
+  permit_fee     integer,
+  safety_fee     integer,
+  width          numeric,
+  height         numeric,
+  lighting       text check (lighting in ('비조명', '내부조명', '외부조명')),
+  sign_faces     jsonb,
+  review_opinion text,
   source_type    public.record_source_type not null default 'manual',
   created_by     uuid references public.profiles(id),
   updated_by     uuid references public.profiles(id),

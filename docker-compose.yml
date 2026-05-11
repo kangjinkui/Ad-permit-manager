@@ -6,7 +6,7 @@ services:
     container_name: ad-permit-manager-web
     working_dir: /app/web
     ports:
-      - "3001:3000"
+      - "3101:3000"
     volumes:
       - .:/app
       - web_node_modules:/app/web/node_modules

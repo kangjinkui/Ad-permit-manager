@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
+import { getPermitSpecificationPayload } from "@/lib/sign-faces";
 
 function padded(n: number) {
   return String(n).padStart(3, "0");
@@ -43,9 +44,7 @@ export async function createPermit(formData: FormData) {
   const safetyCheck = formData.get("safety_check")?.toString() ?? "확인필요";
   const renewalTarget =
     formData.get("renewal_target")?.toString() ?? "연장대상 아님";
-  const widthRaw = formData.get("width")?.toString();
-  const heightRaw = formData.get("height")?.toString();
-  const lighting = formData.get("lighting")?.toString() || null;
+  const specification = getPermitSpecificationPayload(formData);
   const reviewOpinion = formData.get("review_opinion")?.toString().trim() || null;
 
   if (!advertiser || !kind || !category || !place || !content || !status) {
@@ -70,9 +69,10 @@ export async function createPermit(formData: FormData) {
     renewal_target: renewalTarget,
     source_type: "manual",
     created_by: profile.id,
-    width: widthRaw ? Number(widthRaw) : null,
-    height: heightRaw ? Number(heightRaw) : null,
-    lighting,
+    width: specification.width,
+    height: specification.height,
+    lighting: specification.lighting,
+    sign_faces: specification.sign_faces,
     review_opinion: reviewOpinion,
   });
 

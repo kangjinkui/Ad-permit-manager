@@ -4,7 +4,8 @@ export type FeeSignType =
   | "projection_general"
   | "pylon_general"
   | "public_facility_general"
-  | "rooftop_large";
+  | "rooftop_large"
+  | "banner_frame_general";
 
 export type IlluminationType = "비조명" | "내부조명" | "외부조명";
 export type AdOwnerType = "자사광고" | "타사광고";
@@ -46,6 +47,14 @@ export type WallLargeFeeInput = {
   safetyIlluminationType: IlluminationType;
 };
 
+export type BannerFrameFeeInput = {
+  signType: "banner_frame_general";
+  width: number;
+  height: number;
+  adOwnerType: AdOwnerType;
+  illuminationType: IlluminationType;
+};
+
 export type ProjectionFeeInput = {
   signType: "projection_general";
   width: number;
@@ -75,6 +84,7 @@ export type RooftopFeeInput = {
 export type FeeCalculationInput =
   | WallGeneralFeeInput
   | WallLargeFeeInput
+  | BannerFrameFeeInput
   | ProjectionFeeInput
   | PylonFeeInput
   | PublicFacilityFeeInput
@@ -106,6 +116,7 @@ export const feeSignTypeOptions: FeeSignTypeOption[] = [
   { value: "pylon_general", label: "일반 지주이용광고물", description: "지주이용광고물 허가·안전점검 수수료" },
   { value: "public_facility_general", label: "공공시설이용광고물", description: "면별 조명 비중을 반영한 허가·안전점검 수수료" },
   { value: "rooftop_large", label: "대형 옥상간판", description: "면별 높이와 조명 비중을 반영한 허가·내용변경·안전점검 수수료" },
+  { value: "banner_frame_general", label: "일반간판(현수막게시틀)", description: "현수막게시틀 허가·안전점검 수수료" },
 ];
 
 const CATEGORY_NEW = "신규";
@@ -120,6 +131,8 @@ export function createDefaultFeeInput(signType: FeeSignType): FeeCalculationInpu
       return { signType, shapeType: "판류형", width: 0, height: 0, adOwnerType: "자사광고", illuminationType: "비조명" };
     case "wall_large":
       return { signType, width: 0, height: 0, adOwnerType: "자사광고", permitIlluminationType: "비조명", safetyIlluminationType: "비조명" };
+    case "banner_frame_general":
+      return { signType, width: 0, height: 0, adOwnerType: "자사광고", illuminationType: "비조명" };
     case "projection_general":
       return { signType, width: 0, height: 0, faceCount: 1, illuminationType: "비조명" };
     case "pylon_general":
@@ -141,6 +154,7 @@ export function getSupportedFeeSignTypesForPermitKind(kind: string): FeeSignType
   if (kind.includes("지주")) return ["pylon_general"];
   if (kind.includes("공공시설")) return ["public_facility_general"];
   if (kind.includes("옥상")) return ["rooftop_large"];
+  if (kind.includes("현수막게시틀")) return ["banner_frame_general"];
   return [];
 }
 
@@ -214,6 +228,12 @@ function getWallSafetyBaseFee(area: number): number {
   if (area <= 5) return 18000;
   if (area <= 20) return 26000;
   return 26000 + (area - 20) * 1500;
+}
+
+function getBannerFrameSafetyBaseFee(area: number): number {
+  if (area <= 40) return 22000;
+  if (area <= 80) return 45000;
+  return 45000 + (area - 80) * 2000;
 }
 
 function getProjectionPermitBaseFee(area: number): number {
@@ -316,6 +336,13 @@ export function calculateFeeResult(input: FeeCalculationInput, context: FeeConte
       const changeFee = roundDownToThousand(permitFee / 2);
       const safetyFee = applySafetySurcharge(applyLightingFee(getWallSafetyBaseFee(calculatedArea), input.safetyIlluminationType));
       return buildResult(permitFee, safetyFee, changeFee, context);
+    }
+    case "banner_frame_general": {
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, null, context, ["가로와 세로를 모두 입력하세요."]);
+      const calculatedArea = safeRoundArea(input.width * input.height);
+      const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, input.adOwnerType), input.illuminationType);
+      const safetyFee = applySafetySurcharge(applyLightingFee(getBannerFrameSafetyBaseFee(calculatedArea), input.illuminationType));
+      return buildResult(permitFee, safetyFee, null, context);
     }
     case "projection_general": {
       if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height) || !hasPositiveNumber(input.faceCount)) return buildResult(null, null, null, context, ["가로, 세로, 면수를 모두 입력하세요."]);

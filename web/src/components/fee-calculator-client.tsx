@@ -219,6 +219,63 @@ function renderFeeFields(
           </label>
         </div>
       );
+    case "banner_frame_general":
+      return (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            광고유형
+            <select
+              className="field"
+              value={input.adOwnerType}
+              onChange={(event) =>
+                setInput({ ...input, adOwnerType: event.target.value as typeof input.adOwnerType })
+              }
+            >
+              <option value="자사광고">자사광고</option>
+              <option value="타사광고">타사광고</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            조명유형
+            <select
+              className="field"
+              value={input.illuminationType}
+              onChange={(event) =>
+                setInput({
+                  ...input,
+                  illuminationType: event.target.value as typeof input.illuminationType,
+                })
+              }
+            >
+              <option value="비조명">비조명</option>
+              <option value="내부조명">내부조명</option>
+              <option value="외부조명">외부조명</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            가로 (m)
+            <input
+              className="field"
+              type="number"
+              min="0"
+              step="0.001"
+              value={input.width || ""}
+              onChange={(event) => setInput({ ...input, width: toNumber(event.target.value) })}
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+            세로 (m)
+            <input
+              className="field"
+              type="number"
+              min="0"
+              step="0.001"
+              value={input.height || ""}
+              onChange={(event) => setInput({ ...input, height: toNumber(event.target.value) })}
+            />
+          </label>
+        </div>
+      );
     case "projection_general":
     case "pylon_general":
       return (

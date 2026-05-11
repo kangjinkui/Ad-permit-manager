@@ -42,7 +42,11 @@ export function DeliberationClient({ permits, envReady }: Props) {
   function toggleOne(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
@@ -111,6 +115,26 @@ export function DeliberationClient({ permits, envReady }: Props) {
 
   const successResults = results.filter((r) => r.ok) as Extract<DownloadResult, { ok: true }>[];
   const failResults = results.filter((r) => !r.ok) as Extract<DownloadResult, { ok: false }>[];
+
+  function formatSpecification(permit: PermitWithStaff) {
+    if (permit.signFaces?.length) {
+      return `${permit.signFaces.length}면`;
+    }
+    if (permit.width != null && permit.height != null) {
+      return `${permit.width}M × ${permit.height}M`;
+    }
+    return null;
+  }
+
+  function formatLighting(permit: PermitWithStaff) {
+    if (permit.signFaces?.length) {
+      const values = permit.signFaces
+        .map((face, index) => face.lighting ? `${index + 1}면 ${face.lighting}` : null)
+        .filter((value): value is string => Boolean(value));
+      return values.length > 0 ? values.join(", ") : null;
+    }
+    return permit.lighting;
+  }
 
   return (
     <article className="panel">
@@ -196,6 +220,8 @@ export function DeliberationClient({ permits, envReady }: Props) {
                 <tbody className="divide-y divide-slate-100">
                   {permits.map((permit) => {
                     const isSelected = selectedIds.has(permit.id);
+                    const specification = formatSpecification(permit);
+                    const lighting = formatLighting(permit);
                     return (
                       <tr
                         key={permit.id}
@@ -215,14 +241,14 @@ export function DeliberationClient({ permits, envReady }: Props) {
                         <td className="px-4 py-3 text-slate-600">{permit.place}</td>
                         <td className="px-4 py-3 text-slate-600">{permit.hearingAt ?? "—"}</td>
                         <td className="px-4 py-3">
-                          {permit.width != null && permit.height != null ? (
-                            <span className="text-slate-700">{permit.width}M × {permit.height}M</span>
+                          {specification ? (
+                            <span className="text-slate-700">{specification}</span>
                           ) : (
                             <span className="text-amber-600 text-xs">미입력</span>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          {permit.lighting ?? <span className="text-amber-600 text-xs">미입력</span>}
+                          {lighting ?? <span className="text-amber-600 text-xs">미입력</span>}
                         </td>
                       </tr>
                     );

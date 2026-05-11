@@ -17,10 +17,17 @@ export type PermitKind =
   | "입간판"
   | "지주간판"
   | "옥상간판"
+  | "현수막게시틀"
   | "공공시설물이용 광고물"
   | "교통수단이용 광고물";
 
 export type PermitCategory = "신규" | "연장" | "내용변경" | "관리자변경";
+
+export type SignFace = {
+  width: number | null;
+  height: number | null;
+  lighting: "비조명" | "내부조명" | "외부조명" | null;
+};
 
 export type PermitRecord = {
   id: string;
@@ -41,6 +48,7 @@ export type PermitRecord = {
   width: number | null;
   height: number | null;
   lighting: "비조명" | "내부조명" | "외부조명" | null;
+  signFaces: SignFace[] | null;
 };
 
 export const mockPermits: PermitRecord[] = [
@@ -63,6 +71,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
   {
     id: "PM-2026-002",
@@ -83,6 +92,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
   {
     id: "PM-2026-003",
@@ -103,6 +113,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
   {
     id: "PM-2026-004",
@@ -123,6 +134,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
   {
     id: "PM-2026-005",
@@ -143,6 +155,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
   {
     id: "PM-2026-006",
@@ -163,6 +176,7 @@ export const mockPermits: PermitRecord[] = [
     width: null,
     height: null,
     lighting: null,
+    signFaces: null,
   },
 ];
 
@@ -186,6 +200,7 @@ export const permitKinds: PermitKind[] = [
   "입간판",
   "지주간판",
   "옥상간판",
+  "현수막게시틀",
   "공공시설물이용 광고물",
   "교통수단이용 광고물",
 ];

@@ -4,6 +4,7 @@ import type {
   PermitStatus,
   PermitKind,
   PermitCategory,
+  SignFace,
 } from "@/lib/mock-data";
 
 type PermitRow = {
@@ -26,11 +27,43 @@ type PermitRow = {
   width: number | null;
   height: number | null;
   lighting: string | null;
+  sign_faces: unknown;
   review_opinion: string | null;
   profiles: { name: string; title: string | null } | { name: string; title: string | null }[] | null;
 };
 
 export type PermitWithStaff = PermitRecord & { staffName: string | null; staffTitle: string | null; notes: string | null; reviewOpinion: string | null };
+
+function normalizeNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function normalizeLighting(value: unknown): SignFace["lighting"] {
+  return value === "비조명" || value === "내부조명" || value === "외부조명" ? value : null;
+}
+
+function normalizeSignFaces(value: unknown): SignFace[] | null {
+  if (!Array.isArray(value)) return null;
+
+  const faces = value
+    .map((face) => {
+      if (!face || typeof face !== "object") return null;
+      const data = face as Record<string, unknown>;
+      return {
+        width: normalizeNumber(data.width),
+        height: normalizeNumber(data.height),
+        lighting: normalizeLighting(data.lighting),
+      };
+    })
+    .filter((face): face is SignFace => Boolean(face));
+
+  return faces.length > 0 ? faces : null;
+}
 
 function toPermitWithStaff(row: PermitRow): PermitWithStaff {
   return {
@@ -59,6 +92,7 @@ function toPermitWithStaff(row: PermitRow): PermitWithStaff {
     width: row.width ?? null,
     height: row.height ?? null,
     lighting: (row.lighting ?? null) as PermitRecord["lighting"],
+    signFaces: normalizeSignFaces(row.sign_faces),
     reviewOpinion: row.review_opinion ?? null,
   };
 }
@@ -90,7 +124,7 @@ export async function getPermits(
   let query = supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, review_opinion, profiles!created_by(name,title)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, sign_faces, review_opinion, profiles!created_by(name,title)",
     )
     .order("created_at", { ascending: false });
 
@@ -127,7 +161,7 @@ export async function getPermit(recordNo: string): Promise<PermitWithStaff | nul
   const { data, error } = await supabase
     .from("permit_records")
     .select(
-      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, review_opinion, profiles!created_by(name,title)",
+      "record_no, kind, category, advertiser, place, content, quantity, status, processed_at, hearing_at, safety_check, renewal_target, source_type, notes, permit_fee, safety_fee, width, height, lighting, sign_faces, review_opinion, profiles!created_by(name,title)",
     )
     .eq("record_no", recordNo)
     .single();
