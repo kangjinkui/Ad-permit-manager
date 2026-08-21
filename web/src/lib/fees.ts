@@ -284,10 +284,14 @@ function applyWeightedLightingFee(baseFee: number, totalArea: number, internalAr
   return roundDownToThousand(weighted);
 }
 
+// 내용변경 허가수수료는 종류와 무관하게 허가수수료의 1/2 (천원 단위 절사)
+function deriveChangeFee(permitFee: number | null): number | null {
+  return permitFee === null ? null : roundDownToThousand(permitFee / 2);
+}
+
 function buildResult(
   permitFee: number | null,
   safetyFee: number | null,
-  changeFee: number | null,
   context: FeeContext,
   errors: string[] = [],
   warnings: string[] = [],
@@ -296,6 +300,7 @@ function buildResult(
     return { permitFee: null, changeFee: null, safetyFee: null, totalFee: null, appliedPermitFee: null, appliedSafetyFee: null, appliedTotalFee: null, canApplyToPermit: false, errors, warnings };
   }
 
+  const changeFee = deriveChangeFee(permitFee);
   const totalFee = permitFee !== null || safetyFee !== null ? (permitFee ?? 0) + (safetyFee ?? 0) : null;
   const appliedPermitFee = isChangeCategory(context.category) ? changeFee : permitFee;
   let appliedSafetyFee: number | null = safetyFee;
@@ -310,77 +315,76 @@ function buildResult(
     appliedSafetyFee = null;
   }
 
-  if (isChangeCategory(context.category) && changeFee === null) {
-    canApplyToPermit = false;
-    warnings = [...warnings, "선택한 유형은 내용변경 수수료를 지원하지 않습니다."];
-  }
+  // 허가수수료가 있는데 반영값이 비었다면 합계를 0으로 접지 않고 공란 처리한다.
+  const permitFeeDropped = permitFee !== null && appliedPermitFee === null;
+  const appliedTotalFee =
+    permitFeeDropped || (appliedPermitFee === null && appliedSafetyFee === null)
+      ? null
+      : (appliedPermitFee ?? 0) + (appliedSafetyFee ?? 0);
 
-  const appliedTotalFee = appliedPermitFee !== null || appliedSafetyFee !== null ? (appliedPermitFee ?? 0) + (appliedSafetyFee ?? 0) : null;
   return { permitFee, changeFee, safetyFee, totalFee, appliedPermitFee, appliedSafetyFee, appliedTotalFee, canApplyToPermit, errors, warnings };
 }
 
 export function calculateFeeResult(input: FeeCalculationInput, context: FeeContext = {}): FeeCalculationResult {
   switch (input.signType) {
     case "wall_general": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, null, context, ["가로와 세로를 모두 입력하세요."]);
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, context, ["가로와 세로를 모두 입력하세요."]);
       const area = input.width * input.height;
       const calculatedArea = input.shapeType === "입체형" ? safeRoundArea(area * 0.7) : safeRoundArea(area);
       const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, input.adOwnerType), input.illuminationType);
       const safetyFee = applySafetySurcharge(applyLightingFee(getWallSafetyBaseFee(calculatedArea), input.illuminationType));
-      return buildResult(permitFee, safetyFee, null, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "wall_large": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, null, context, ["가로와 세로를 모두 입력하세요."]);
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, context, ["가로와 세로를 모두 입력하세요."]);
       const calculatedArea = safeRoundArea(input.width * input.height);
       const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, input.adOwnerType), input.permitIlluminationType);
-      const changeFee = roundDownToThousand(permitFee / 2);
       const safetyFee = applySafetySurcharge(applyLightingFee(getWallSafetyBaseFee(calculatedArea), input.safetyIlluminationType));
-      return buildResult(permitFee, safetyFee, changeFee, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "banner_frame_general": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, null, context, ["가로와 세로를 모두 입력하세요."]);
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, context, ["가로와 세로를 모두 입력하세요."]);
       const calculatedArea = safeRoundArea(input.width * input.height);
       const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, input.adOwnerType), input.illuminationType);
       const safetyFee = applySafetySurcharge(applyLightingFee(getBannerFrameSafetyBaseFee(calculatedArea), input.illuminationType));
-      return buildResult(permitFee, safetyFee, null, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "projection_general": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height) || !hasPositiveNumber(input.faceCount)) return buildResult(null, null, null, context, ["가로, 세로, 면수를 모두 입력하세요."]);
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height) || !hasPositiveNumber(input.faceCount)) return buildResult(null, null, context, ["가로, 세로, 면수를 모두 입력하세요."]);
       const calculatedArea = safeRoundArea(input.width * input.height * input.faceCount);
       const permitFee = applyLightingFee(getProjectionPermitBaseFee(calculatedArea), input.illuminationType);
       const safetyFee = applySafetySurcharge(applyLightingFee(getProjectionSafetyBaseFee(calculatedArea), input.illuminationType));
-      return buildResult(permitFee, safetyFee, null, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "pylon_general": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height) || !hasPositiveNumber(input.faceCount)) return buildResult(null, null, null, context, ["가로, 세로, 면수를 모두 입력하세요."]);
+      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height) || !hasPositiveNumber(input.faceCount)) return buildResult(null, null, context, ["가로, 세로, 면수를 모두 입력하세요."]);
       const calculatedArea = safeRoundArea(input.width * input.height * input.faceCount);
       const permitFee = applyLightingFee(getPylonPermitBaseFee(calculatedArea), input.illuminationType);
       const safetyFee = applySafetySurcharge(applyLightingFee(getAreaBasedSafetyBaseFee(calculatedArea), input.illuminationType));
-      return buildResult(permitFee, safetyFee, null, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "public_facility_general": {
-      if (input.faces.length === 0) return buildResult(null, null, null, context, ["최소 한 면 이상 입력하세요."]);
+      if (input.faces.length === 0) return buildResult(null, null, context, ["최소 한 면 이상 입력하세요."]);
       const invalidFace = input.faces.some((face) => !hasPositiveNumber(face.width) || !hasPositiveNumber(face.height));
-      if (invalidFace) return buildResult(null, null, null, context, ["모든 면의 가로와 높이를 입력하세요."]);
+      if (invalidFace) return buildResult(null, null, context, ["모든 면의 가로와 높이를 입력하세요."]);
       const totalArea = safeRoundArea(sum(input.faces.map((face) => face.width * face.height)));
       const internalArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "내부조명").map((face) => face.width * face.height)));
       const externalArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "외부조명").map((face) => face.width * face.height)));
       const permitFee = applyWeightedLightingFee(getPublicFacilityPermitBaseFee(totalArea), totalArea, internalArea, externalArea);
       const safetyFee = applySafetySurcharge(applyWeightedLightingFee(getAreaBasedSafetyBaseFee(totalArea), totalArea, internalArea, externalArea));
-      return buildResult(permitFee, safetyFee, null, context);
+      return buildResult(permitFee, safetyFee, context);
     }
     case "rooftop_large": {
-      if (input.faces.length === 0) return buildResult(null, null, null, context, ["최소 한 면 이상 입력하세요."]);
+      if (input.faces.length === 0) return buildResult(null, null, context, ["최소 한 면 이상 입력하세요."]);
       const invalidFace = input.faces.some((face) => !hasPositiveNumber(face.width) || !hasPositiveNumber(face.panelHeight) || !hasNonNegativeNumber(face.extraHeightForSafety));
-      if (invalidFace) return buildResult(null, null, null, context, ["모든 면의 가로, 판 높이, 안전 추가 높이를 확인하세요."]);
+      if (invalidFace) return buildResult(null, null, context, ["모든 면의 가로, 판 높이, 안전 추가 높이를 확인하세요."]);
       const totalPermitArea = safeRoundArea(sum(input.faces.map((face) => face.width * face.panelHeight)));
       const internalPermitArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "내부조명").map((face) => face.width * face.panelHeight)));
       const externalPermitArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "외부조명").map((face) => face.width * face.panelHeight)));
       const permitFee = applyWeightedLightingFee(getRooftopPermitBaseFee(totalPermitArea), totalPermitArea, internalPermitArea, externalPermitArea);
-      const changeFee = roundDownToThousand(permitFee / 2);
       const totalSafetyArea = safeRoundArea(sum(input.faces.map((face) => face.width * (face.panelHeight + face.extraHeightForSafety))));
       const safetyFee = applySafetySurcharge(applyWeightedLightingFee(getRooftopSafetyBaseFee(totalSafetyArea), totalSafetyArea, internalPermitArea, externalPermitArea));
-      return buildResult(permitFee, safetyFee, changeFee, context);
+      return buildResult(permitFee, safetyFee, context);
     }
   }
 }

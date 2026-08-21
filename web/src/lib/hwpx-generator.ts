@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { PermitWithStaff } from "@/lib/permits";
 import type { PermitKind } from "@/lib/mock-data";
+import { joinFaceValues } from "@/lib/sign-faces";
 
 const TEMPLATE_PATH = path.join(process.cwd(), "public", "templates", "deliberation_template.hwpx");
 
@@ -67,28 +68,46 @@ function formatMeter(value: number | null): string {
   return value == null ? "?" : String(value);
 }
 
+function formatFaceSize(width: number | null, height: number | null): string {
+  return `가로(${formatMeter(width)}M)*세로(${formatMeter(height)}M)`;
+}
+
 function formatSpecificationText(permit: PermitWithStaff): string {
-  if (permit.signFaces?.length) {
-    return permit.signFaces
-      .map(
-        (face, index) =>
-          `${index + 1}면 가로(${formatMeter(face.width)}M)*세로(${formatMeter(face.height)}M)`,
-      )
+  const faces = permit.signFaces;
+
+  if (faces?.length) {
+    if (faces.length === 1) {
+      return formatFaceSize(faces[0].width, faces[0].height);
+    }
+    return faces
+      .map((face, index) => `${index + 1}면 ${formatFaceSize(face.width, face.height)}`)
       .join(", ");
   }
 
-  return `가로(${formatMeter(permit.width)}M)*세로(${formatMeter(permit.height)}M)`;
+  return formatFaceSize(permit.width, permit.height);
 }
 
 function formatLightingText(permit: PermitWithStaff): string | null {
-  if (permit.signFaces?.length) {
-    const values = permit.signFaces
-      .map((face, index) => face.lighting ? `${index + 1}면 ${face.lighting}` : null)
+  const faces = permit.signFaces;
+
+  if (faces?.length) {
+    if (faces.length === 1) return faces[0].lighting ?? permit.lighting;
+    const values = faces
+      .map((face, index) => (face.lighting ? `${index + 1}면 ${face.lighting}` : null))
       .filter((value): value is string => Boolean(value));
     return values.length > 0 ? values.join(", ") : null;
   }
 
   return permit.lighting;
+}
+
+// 면별 표시장소·표시내용이 다르면 "1면: … / 2면: …" 로 결합한다.
+function formatPlaceText(permit: PermitWithStaff): string {
+  return joinFaceValues(permit.signFaces, (face) => face.place) ?? permit.place;
+}
+
+function formatContentText(permit: PermitWithStaff): string {
+  return joinFaceValues(permit.signFaces, (face) => face.content) ?? permit.content;
 }
 
 export async function generateDeliberationHwpx(
@@ -130,7 +149,7 @@ export async function generateDeliberationHwpx(
   // parts[0] = 테이블 이전 내용, parts[1..] = 각 셀
 
   // 셀 3: 광고물 위치 (셀 2는 레이아웃용 빈 셀)
-  parts[3] = insertTextIntoEmptyCell(parts[3], permit.place);
+  parts[3] = insertTextIntoEmptyCell(parts[3], formatPlaceText(permit));
 
   // 셀 7: 광고주 성명
   parts[7] = insertTextIntoEmptyCell(parts[7], permit.advertiser);
@@ -157,7 +176,7 @@ export async function generateDeliberationHwpx(
   parts[22] = insertTextIntoEmptyCell(parts[22], permit.kind);
 
   // 셀 24: 광고 내용
-  parts[24] = insertTextIntoEmptyCell(parts[24], permit.content);
+  parts[24] = insertTextIntoEmptyCell(parts[24], formatContentText(permit));
 
   // 셀 26: 광고물 규격
   parts[26] = parts[26].replace(

@@ -51,15 +51,6 @@ export function NewPermitForm({ envReady, error }: Props) {
         </label>
         <SignSpecificationFields />
 
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
-          표시장소 *
-          <input name="place" className="field" placeholder="주소 또는 위치 설명" required />
-        </label>
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
-          표시내용 *
-          <input name="content" className="field" placeholder="표시 내용 입력" required />
-        </label>
-
         <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
           상태 *
           <select

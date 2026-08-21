@@ -116,23 +116,39 @@ export function DeliberationClient({ permits, envReady }: Props) {
   const successResults = results.filter((r) => r.ok) as Extract<DownloadResult, { ok: true }>[];
   const failResults = results.filter((r) => !r.ok) as Extract<DownloadResult, { ok: false }>[];
 
+  function formatSize(width: number | null, height: number | null) {
+    if (width == null && height == null) return null;
+    return `${width ?? "?"}M × ${height ?? "?"}M`;
+  }
+
   function formatSpecification(permit: PermitWithStaff) {
-    if (permit.signFaces?.length) {
-      return `${permit.signFaces.length}면`;
+    const faces = permit.signFaces;
+
+    if (faces?.length) {
+      if (faces.length === 1) return formatSize(faces[0].width, faces[0].height);
+      const values = faces
+        .map((face, index) => {
+          const size = formatSize(face.width, face.height);
+          return size ? `${index + 1}면 ${size}` : null;
+        })
+        .filter((value): value is string => Boolean(value));
+      return values.length > 0 ? values.join(", ") : `${faces.length}면`;
     }
-    if (permit.width != null && permit.height != null) {
-      return `${permit.width}M × ${permit.height}M`;
-    }
-    return null;
+
+    return formatSize(permit.width, permit.height);
   }
 
   function formatLighting(permit: PermitWithStaff) {
-    if (permit.signFaces?.length) {
-      const values = permit.signFaces
-        .map((face, index) => face.lighting ? `${index + 1}면 ${face.lighting}` : null)
+    const faces = permit.signFaces;
+
+    if (faces?.length) {
+      if (faces.length === 1) return faces[0].lighting ?? permit.lighting;
+      const values = faces
+        .map((face, index) => (face.lighting ? `${index + 1}면 ${face.lighting}` : null))
         .filter((value): value is string => Boolean(value));
       return values.length > 0 ? values.join(", ") : null;
     }
+
     return permit.lighting;
   }
 

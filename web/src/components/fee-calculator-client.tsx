@@ -739,6 +739,11 @@ export function FeeCalculatorClient({ permits }: Props) {
           <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
             {formatWon(selectedPermit ? result.appliedTotalFee : result.totalFee)}
           </p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            {selectedPermit
+              ? `허가 ${formatWon(result.appliedPermitFee)} + 안전점검 ${formatWon(result.appliedSafetyFee)}`
+              : `허가 ${formatWon(result.permitFee)} + 안전점검 ${formatWon(result.safetyFee)}`}
+          </p>
         </article>
       </section>
 

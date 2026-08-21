@@ -67,9 +67,11 @@ const profile = envReady ? await requireStaff() : await getProfile();
 
 - `lib/mock-data.ts` — 타입 정의 전용 (`PermitRecord`, `PermitKind`, `PermitStatus` 등). **수정 금지**.
 - `lib/permits.ts` — Supabase 쿼리 함수. DB snake_case → camelCase 변환 (`toPermitWithStaff`).  
-  `PermitWithStaff = PermitRecord & { staffName, staffTitle, notes, reviewOpinion }`.
+  `PermitWithStaff = Omit<PermitRecord, "signFaces"> & { signFaces: PermitSignFace[] | null, staffName, staffTitle, notes, reviewOpinion }`.
+- `lib/sign-faces.ts` — 다면 광고물 처리. `PermitSignFace = SignFace & { place, content }` (mock-data 수정 금지라 여기서 확장).
+  `getPermitSpecificationPayload(formData)`가 `sign_faces_json`을 파싱해 면 배열과 **1면 기준 대표값**(`width`/`height`/`lighting`/`place`/`content`)을 함께 반환한다.
 - `lib/auth.ts` — 프로필 조회 및 인증 가드.
-- `lib/fees.ts` — 수수료 계산 로직.
+- `lib/fees.ts` — 수수료 계산 로직. 내용변경 허가수수료는 종류와 무관하게 `buildResult()`에서 허가수수료의 1/2(천원 단위 절사)로 파생한다.
 - `lib/hwpx-generator.ts` — HWPX(한글 문서) 생성. JSZip으로 `public/templates/deliberation_template.hwpx` 조작.
 
 ### 주요 페이지 구조
@@ -78,7 +80,7 @@ const profile = envReady ? await requireStaff() : await getProfile();
 |------|------|
 | `/dashboard` | KPI 통계 |
 | `/permits` | 목록 + URL searchParams 기반 필터 |
-| `/permits/new` | 수동 등록 (규격·조명·검토의견 포함) |
+| `/permits/new` | 수동 등록 (면별 규격·조명·표시장소·표시내용, 검토의견 포함) |
 | `/permits/[id]` | 상세 + 상태변경 + 이력. 상태가 "소심의 상정예정"이면 담당자 검토의견 필드 노출 |
 | `/permits/upload` | 엑셀 일괄 업로드 |
 | `/deliberation` | 소심의 의결서(HWPX) 생성 — "소심의 상정예정" 건만 표시 |
@@ -110,24 +112,37 @@ const profile = envReady ? await requireStaff() : await getProfile();
 - `DeliberationPage` (서버) → `DeliberationClient` (클라이언트)
 - `NewPermitPage` (서버) → `NewPermitForm` (클라이언트)
 
+### 다면 광고물 (한 건에 2면 이상)
+
+한 광고주가 2면 이상을 동시에 신청하는 경우를 지원한다. 종류 제한 없이 모든 `PermitKind`에서 면 추가·삭제 가능.
+
+- 저장 위치: `permit_records.sign_faces` (jsonb, 스키마리스) — 면별 `{ width, height, lighting, place, content }`
+- 최상위 `place`/`content`/`width`/`height`/`lighting` 컬럼에는 **1면 값이 대표값으로 동기화**된다.
+  목록·검색·엑셀·대시보드 로직은 최상위 컬럼만 보므로 변경 불필요.
+- UI는 `components/sign-specification-fields.tsx` 단일 컴포넌트. 1면 입력만 `name` 속성을 가져
+  브라우저 `required` 검증을 받고, 전체 면은 hidden `sign_faces_json`으로 전송된다.
+- `sign_faces`가 `null`인 기존 레코드는 최상위 컬럼으로 1면을 구성해 읽는다 (하위 호환).
+- 규격 입력은 소수점 3자리(`step="0.001"`). DB `width`/`height`는 자릿수 제약 없는 `numeric`.
+
 ### HWPX 의결서 생성
 
 `public/templates/deliberation_template.hwpx`(ZIP 포맷)의 `Contents/section0.xml`을 `<hp:tc>` 셀 단위로 치환.  
 `generateDeliberationHwpx(permit, committeeNo, hearingDateOverride?)` 형태로 호출.  
-규격·조명·담당자 검토의견은 permit 레코드(`width`, `height`, `lighting`, `reviewOpinion`)에서 직접 읽음 — 의결서 생성 UI에서 별도 입력 불필요.
+규격·조명·담당자 검토의견은 permit 레코드(`width`, `height`, `lighting`, `reviewOpinion`, `signFaces`)에서 직접 읽음 — 의결서 생성 UI에서 별도 입력 불필요.
+다면 건은 `joinFaceValues()`로 면별 값을 결합한다 (값이 모두 같으면 단일 문자열, 다르면 `1면: … / 2면: …`).
 
 주요 셀 인덱스 (`split("<hp:tc ")` 기준):
 
 | 셀 | 내용 |
 |----|------|
-| 3 | 광고물 위치 (place) |
+| 3 | 광고물 위치 (면별 place 결합) |
 | 7 | 광고주 성명 (advertiser) |
 | 14-18 | 광고물 현황 체크 (kind → KIND_TO_CHECK_CELL 매핑) |
 | 20 | 상호 (advertiser) |
 | 22 | 광고물 종류 (kind) |
-| 24 | 광고 내용 (content) |
-| 26 | 규격 가로×세로 (width, height) |
-| 28 | 조명 (lighting) |
+| 24 | 광고 내용 (면별 content 결합) |
+| 26 | 규격 가로×세로 (면별 width, height) |
+| 28 | 조명 (면별 lighting) |
 | 30 | 직급·담당자명 (staffTitle, staffName) |
 | 33 | 담당자 검토의견 (reviewOpinion) |
 | 60 | 말미 날짜 |
@@ -137,9 +152,9 @@ API Route: `POST /api/deliberation/generate` → `{ permitId, committeeNo, heari
 ### DB 마이그레이션
 
 `web/supabase/` 폴더에 번호순으로 관리. 새 마이그레이션은 다음 번호로 파일 생성 후 Supabase SQL Editor에서 수동 실행.  
-현재 최신: `11_migration_review_opinion.sql` (`permit_records.review_opinion TEXT` 컬럼 추가).
+현재 최신: `12_migration_sign_faces.sql` (`permit_records.sign_faces jsonb` 컬럼 추가). `sign_faces`는 스키마리스라 면별 필드 추가 시 마이그레이션 불필요.
 
-`permit_records` 주요 컬럼: `record_no(PK)`, `kind`, `category`, `advertiser`, `place`, `content`, `quantity`, `status`, `processed_at`, `hearing_at`, `safety_check`, `renewal_target`, `source_type`, `notes`, `permit_fee`, `safety_fee`, `width`, `height`, `lighting`, `review_opinion`, `created_by(FK→profiles)`, `updated_by(FK→profiles)`.
+`permit_records` 주요 컬럼: `record_no(PK)`, `kind`, `category`, `advertiser`, `place`, `content`, `quantity`, `status`, `processed_at`, `hearing_at`, `safety_check`, `renewal_target`, `source_type`, `notes`, `permit_fee`, `safety_fee`, `width`, `height`, `lighting`, `sign_faces`, `review_opinion`, `created_by(FK→profiles)`, `updated_by(FK→profiles)`.
 
 `profiles` 컬럼: `id`, `email`, `name`, `role`, `status`, `department`, `title`.
 

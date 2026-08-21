@@ -35,8 +35,6 @@ export async function createPermit(formData: FormData) {
   const advertiser = formData.get("advertiser")?.toString().trim() ?? "";
   const kind = formData.get("kind")?.toString() ?? "";
   const category = formData.get("category")?.toString() ?? "";
-  const place = formData.get("place")?.toString().trim() ?? "";
-  const content = formData.get("content")?.toString().trim() ?? "";
   const status = formData.get("status")?.toString() ?? "";
   const processedAt = formData.get("processed_at")?.toString() || null;
   const hearingAt = formData.get("hearing_at")?.toString() || null;
@@ -45,6 +43,9 @@ export async function createPermit(formData: FormData) {
   const renewalTarget =
     formData.get("renewal_target")?.toString() ?? "연장대상 아님";
   const specification = getPermitSpecificationPayload(formData);
+  // 표시장소·표시내용은 1면 값을 대표값으로 사용한다.
+  const place = specification.place ?? "";
+  const content = specification.content ?? "";
   const reviewOpinion = formData.get("review_opinion")?.toString().trim() || null;
 
   if (!advertiser || !kind || !category || !place || !content || !status) {

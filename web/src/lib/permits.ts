@@ -6,6 +6,7 @@ import type {
   PermitCategory,
   SignFace,
 } from "@/lib/mock-data";
+import type { PermitSignFace } from "@/lib/sign-faces";
 
 type PermitRow = {
   record_no: string;
@@ -32,7 +33,13 @@ type PermitRow = {
   profiles: { name: string; title: string | null } | { name: string; title: string | null }[] | null;
 };
 
-export type PermitWithStaff = PermitRecord & { staffName: string | null; staffTitle: string | null; notes: string | null; reviewOpinion: string | null };
+export type PermitWithStaff = Omit<PermitRecord, "signFaces"> & {
+  signFaces: PermitSignFace[] | null;
+  staffName: string | null;
+  staffTitle: string | null;
+  notes: string | null;
+  reviewOpinion: string | null;
+};
 
 function normalizeNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -47,7 +54,13 @@ function normalizeLighting(value: unknown): SignFace["lighting"] {
   return value === "비조명" || value === "내부조명" || value === "외부조명" ? value : null;
 }
 
-function normalizeSignFaces(value: unknown): SignFace[] | null {
+function normalizeText(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+function normalizeSignFaces(value: unknown): PermitSignFace[] | null {
   if (!Array.isArray(value)) return null;
 
   const faces = value
@@ -58,9 +71,11 @@ function normalizeSignFaces(value: unknown): SignFace[] | null {
         width: normalizeNumber(data.width),
         height: normalizeNumber(data.height),
         lighting: normalizeLighting(data.lighting),
+        place: normalizeText(data.place),
+        content: normalizeText(data.content),
       };
     })
-    .filter((face): face is SignFace => Boolean(face));
+    .filter((face): face is PermitSignFace => Boolean(face));
 
   return faces.length > 0 ? faces : null;
 }

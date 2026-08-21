@@ -94,17 +94,10 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
                 defaultWidth={permit.width}
                 defaultHeight={permit.height}
                 defaultLighting={permit.lighting}
+                defaultPlace={permit.place}
+                defaultContent={permit.content}
                 defaultSignFaces={permit.signFaces}
               />
-
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
-                표시장소 *
-                <input name="place" className="field" defaultValue={permit.place} required />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 md:col-span-2 xl:col-span-3">
-                표시내용 *
-                <input name="content" className="field" defaultValue={permit.content} required />
-              </label>
 
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 수량
