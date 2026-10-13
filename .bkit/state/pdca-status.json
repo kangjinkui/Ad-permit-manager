@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-23T00:31:52.771Z",
+  "lastUpdated": "2026-10-13T01:17:32.108Z",
   "activeFeatures": [
     "web",
     "permits",
@@ -14,7 +14,8 @@
     "admin",
     "users",
     "generate",
-    "deliberation"
+    "deliberation",
+    "export"
   ],
   "primaryFeature": "web",
   "features": {
@@ -27,9 +28,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T01:26:49.355Z",
-        "lastUpdated": "2026-04-23T00:31:52.771Z"
+        "lastUpdated": "2026-08-21T08:01:18.425Z"
       },
-      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\lib\\mock-data.ts"
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\components\\sign-specification-fields.tsx"
     },
     "permits": {
       "phase": "do",
@@ -186,6 +187,19 @@
         "lastUpdated": "2026-04-21T02:12:28.144Z"
       },
       "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\deliberation\\deliberation-client.tsx"
+    },
+    "export": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-10-13T01:17:32.108Z",
+        "lastUpdated": "2026-10-13T01:17:32.108Z"
+      },
+      "lastFile": "C:\\Users\\user\\dev\\Ad-permit-manager\\web\\src\\app\\api\\permits\\export\\route.ts"
     }
   },
   "pipeline": {
@@ -196,7 +210,7 @@
   "session": {
     "startedAt": "2026-03-27T01:12:32.946Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-23T00:31:52.771Z"
+    "lastActivity": "2026-10-13T01:17:32.108Z"
   },
   "history": [
     {
@@ -1036,6 +1050,24 @@
     {
       "timestamp": "2026-04-23T00:31:52.771Z",
       "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-21T08:00:36.534Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-08-21T08:01:18.425Z",
+      "feature": "web",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-10-13T01:17:32.108Z",
+      "feature": "export",
       "phase": "do",
       "action": "updated"
     }
