@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { describeSignUpError } from "@/lib/auth-errors";
 import { hasSupabaseEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,13 +65,7 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    const message =
-      error.message.includes("already registered") ||
-      error.message.includes("already been registered")
-        ? "이미 가입된 이메일 주소입니다."
-        : error.message;
-
-    redirect(buildRegisterRedirect({ error: message, email }));
+    redirect(buildRegisterRedirect({ error: describeSignUpError(error), email }));
   }
 
   redirect("/login/pending");

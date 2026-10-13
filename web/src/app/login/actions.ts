@@ -3,6 +3,11 @@
 import { redirect } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/env";
 import { normalizeNextPath } from "@/lib/auth-redirect";
+import {
+  describeSignInError,
+  isServiceUnavailableError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+} from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/server";
 
 function buildLoginRedirect(params: {
@@ -54,9 +59,16 @@ export async function signIn(formData: FormData) {
   });
 
   if (error) {
+    if (isServiceUnavailableError(error)) {
+      console.error("[signIn] Supabase auth unavailable", {
+        status: error.status,
+        message: error.message,
+      });
+    }
+
     redirect(
       buildLoginRedirect({
-        error: "이메일 또는 비밀번호가 올바르지 않습니다.",
+        error: describeSignInError(error),
         email,
         next: nextPath,
       }),
@@ -67,11 +79,24 @@ export async function signIn(formData: FormData) {
   const user = data.user;
 
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("status")
       .eq("id", user.id)
       .single();
+
+    // 프로필 조회 자체가 실패한 경우(쿼터 제한 등)는 pending으로 오판하지 않는다.
+    if (profileError && isServiceUnavailableError(profileError)) {
+      console.error("[signIn] profile lookup unavailable", profileError);
+      await supabase.auth.signOut();
+      redirect(
+        buildLoginRedirect({
+          error: SERVICE_UNAVAILABLE_MESSAGE,
+          email,
+          next: nextPath,
+        }),
+      );
+    }
 
     const status = (profile?.status as string) ?? "pending";
 

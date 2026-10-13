@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isServiceUnavailableError } from "./src/lib/auth-errors";
 import { hasSupabaseEnv } from "./src/lib/env";
 
 const staffProtectedPrefixes = ["/dashboard", "/permits", "/fees"];
@@ -60,11 +61,18 @@ export async function middleware(request: NextRequest) {
 
   // 2. 로그인 상태일 때 profile status 확인
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("status, role")
       .eq("id", user.id)
       .single();
+
+    // Supabase가 응답하지 못하는 상황(쿼터 제한·장애)에서는 프로필을 pending으로
+    // 오판해 활성 사용자를 승인 대기 화면으로 보내지 않고 그대로 통과시킨다.
+    if (profileError && isServiceUnavailableError(profileError)) {
+      console.error("[middleware] profile lookup unavailable", profileError);
+      return response;
+    }
 
     const status = (profile?.status as string) ?? "pending";
     const role = (profile?.role as string) ?? "staff";
