@@ -1,4 +1,5 @@
-import { getPermits, getStaffList, type PermitFilters } from "@/lib/permits";
+import { getPermits, getStaffList, getStaffProgress, type PermitFilters } from "@/lib/permits";
+import { StaffProgressBoard } from "@/components/staff-progress-board";
 import { PermitsFilter } from "@/components/permits-filter";
 import { PermitsTableClient } from "@/components/permits-table-client";
 
@@ -8,9 +9,10 @@ type Props = {
 };
 
 export async function PermitsTable({ searchParams = {}, canDelete = false }: Props) {
-  const [permits, staffList] = await Promise.all([
+  const [permits, staffList, staffProgress] = await Promise.all([
     getPermits(searchParams),
     getStaffList(),
+    getStaffProgress(),
   ]);
 
   const exportParams = new URLSearchParams(
@@ -20,6 +22,8 @@ export async function PermitsTable({ searchParams = {}, canDelete = false }: Pro
 
   return (
     <div className="panel">
+      <StaffProgressBoard progress={staffProgress} activeStaffName={searchParams.staffName} />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Shared Records</p>

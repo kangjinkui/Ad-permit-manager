@@ -210,6 +210,42 @@ export async function getPermitStats(): Promise<PermitStats> {
   };
 }
 
+// 민원인에게 결과가 전달된 상태. 나머지(접수·보완·심의 상정예정·발송예정 등)는 진행중.
+export const completedStatuses: ReadonlySet<PermitStatus> = new Set<PermitStatus>([
+  "공문발송",
+  "이메일 발송완료",
+  "직접방문수령",
+]);
+
+export type StaffProgress = {
+  staffName: string;
+  inProgress: number;
+  completed: number;
+};
+
+export async function getStaffProgress(): Promise<StaffProgress[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("permit_records")
+    .select("status, profiles!created_by(name)");
+
+  if (error || !data) return [];
+
+  const byStaff = new Map<string, StaffProgress>();
+  for (const row of data as Pick<PermitRow, "status" | "profiles">[]) {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    const staffName = profile?.name ?? "미지정";
+    const entry = byStaff.get(staffName) ?? { staffName, inProgress: 0, completed: 0 };
+    if (completedStatuses.has(row.status as PermitStatus)) entry.completed += 1;
+    else entry.inProgress += 1;
+    byStaff.set(staffName, entry);
+  }
+
+  return [...byStaff.values()].sort(
+    (a, b) => b.inProgress - a.inProgress || a.staffName.localeCompare(b.staffName, "ko"),
+  );
+}
+
 export type StatusHistory = {
   id: string;
   permitId: string;
