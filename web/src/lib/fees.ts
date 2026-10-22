@@ -27,6 +27,7 @@ export type RooftopFaceInput = {
   panelHeight: number;
   extraHeightForSafety: number;
   illuminationType: IlluminationType;
+  hasAd: boolean;
 };
 
 export type WallGeneralFeeInput = {
@@ -140,7 +141,7 @@ export function createDefaultFeeInput(signType: FeeSignType): FeeCalculationInpu
     case "public_facility_general":
       return { signType, faces: [{ width: 0, height: 0, illuminationType: "비조명" }, { width: 0, height: 0, illuminationType: "비조명" }] };
     case "rooftop_large":
-      return { signType, faces: [{ width: 0, panelHeight: 0, extraHeightForSafety: 0, illuminationType: "비조명" }] };
+      return { signType, faces: [{ width: 0, panelHeight: 0, extraHeightForSafety: 0, illuminationType: "비조명", hasAd: true }] };
   }
 }
 
@@ -378,12 +379,18 @@ export function calculateFeeResult(input: FeeCalculationInput, context: FeeConte
       if (input.faces.length === 0) return buildResult(null, null, context, ["최소 한 면 이상 입력하세요."]);
       const invalidFace = input.faces.some((face) => !hasPositiveNumber(face.width) || !hasPositiveNumber(face.panelHeight) || !hasNonNegativeNumber(face.extraHeightForSafety));
       if (invalidFace) return buildResult(null, null, context, ["모든 면의 가로, 판 높이, 안전 추가 높이를 확인하세요."]);
-      const totalPermitArea = safeRoundArea(sum(input.faces.map((face) => face.width * face.panelHeight)));
-      const internalPermitArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "내부조명").map((face) => face.width * face.panelHeight)));
-      const externalPermitArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "외부조명").map((face) => face.width * face.panelHeight)));
+      // 허가수수료는 광고면만, 안전점검은 광고 없는 면을 포함한 전체 구조물 면 기준
+      const adFaces = input.faces.filter((face) => face.hasAd);
+      if (adFaces.length === 0) return buildResult(null, null, context, ["광고면을 최소 한 면 이상 지정하세요."]);
+      const panelArea = (face: RooftopFaceInput) => face.width * face.panelHeight;
+      const totalPermitArea = safeRoundArea(sum(adFaces.map(panelArea)));
+      const internalPermitArea = safeRoundArea(sum(adFaces.filter((face) => face.illuminationType === "내부조명").map(panelArea)));
+      const externalPermitArea = safeRoundArea(sum(adFaces.filter((face) => face.illuminationType === "외부조명").map(panelArea)));
       const permitFee = applyWeightedLightingFee(getRooftopPermitBaseFee(totalPermitArea), totalPermitArea, internalPermitArea, externalPermitArea);
       const totalSafetyArea = safeRoundArea(sum(input.faces.map((face) => face.width * (face.panelHeight + face.extraHeightForSafety))));
-      const safetyFee = applySafetySurcharge(applyWeightedLightingFee(getRooftopSafetyBaseFee(totalSafetyArea), totalSafetyArea, internalPermitArea, externalPermitArea));
+      const internalSafetyArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "내부조명").map(panelArea)));
+      const externalSafetyArea = safeRoundArea(sum(input.faces.filter((face) => face.illuminationType === "외부조명").map(panelArea)));
+      const safetyFee = applySafetySurcharge(applyWeightedLightingFee(getRooftopSafetyBaseFee(totalSafetyArea), totalSafetyArea, internalSafetyArea, externalSafetyArea));
       return buildResult(permitFee, safetyFee, context);
     }
   }

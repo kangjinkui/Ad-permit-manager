@@ -438,7 +438,12 @@ function renderFeeFields(
             <div>
               <p className="text-sm font-semibold text-slate-900">면별 입력</p>
               <p className="text-sm text-slate-500">
-                허가 높이와 안전 추가 높이를 같은 면 단위로 입력합니다.
+                허가 높이와 안전 추가 높이를 같은 면 단위로 입력합니다. 광고가 없는 면은 &lsquo;광고면&rsquo; 체크를 해제하면
+                허가수수료에서 제외되고 안전점검에는 포함됩니다.
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                전체 {input.faces.length}면 · 광고면 {input.faces.filter((face) => face.hasAd).length}면 (허가) · 안전점검{" "}
+                {input.faces.length}면
               </p>
             </div>
             <button
@@ -454,6 +459,7 @@ function renderFeeFields(
                       panelHeight: 0,
                       extraHeightForSafety: 0,
                       illuminationType: "비조명",
+                      hasAd: true,
                     },
                   ],
                 })
@@ -465,8 +471,26 @@ function renderFeeFields(
           {input.faces.map((face, index) => (
             <div
               key={`rooftop-face-${index}`}
-              className="grid gap-4 rounded-[24px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-5"
+              className={`grid gap-4 rounded-[24px] border p-4 md:grid-cols-6 ${
+                face.hasAd ? "border-slate-200 bg-slate-50" : "border-dashed border-slate-300 bg-white"
+              }`}
             >
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                {index + 1}면 광고
+                <span className="flex h-full items-center gap-2 font-normal">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={face.hasAd}
+                    onChange={(event) =>
+                      setInput((current) =>
+                        updateRooftopFace(current, index, { hasAd: event.target.checked }),
+                      )
+                    }
+                  />
+                  {face.hasAd ? "광고면" : "광고 없음 (안전점검만)"}
+                </span>
+              </label>
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 가로 (m)
                 <input
