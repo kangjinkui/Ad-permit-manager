@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { StaffProgress } from "@/lib/permits";
+import { EXCEL_GROUP_NAME, UNASSIGNED_GROUP_NAME, type StaffProgress } from "@/lib/permits";
 
 type Props = {
   progress: StaffProgress[];
@@ -23,7 +23,8 @@ export function StaffProgressBoard({ progress, activeStaffName }: Props) {
       </div>
       <p className="mt-1 text-xs text-slate-500">
         공문발송 · 이메일 발송완료 · 직접방문수령은 처리완료, 그 외 상태는 진행중으로 집계합니다.
-        카드를 누르면 해당 담당자 건만 표시됩니다.
+        카드를 누르면 해당 담당자 건만 표시됩니다. 엑셀로 일괄 등록한 건은 실제 담당자를 알 수 없어
+        &lsquo;{EXCEL_GROUP_NAME}&rsquo;으로 따로 집계합니다.
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -31,17 +32,21 @@ export function StaffProgressBoard({ progress, activeStaffName }: Props) {
           const total = p.inProgress + p.completed;
           const rate = total > 0 ? Math.round((p.completed / total) * 100) : 0;
           const active = p.staffName === activeStaffName;
-          const href =
-            p.staffName === "미지정"
-              ? "/permits"
-              : `/permits?staffName=${encodeURIComponent(p.staffName)}`;
+          const isGroup = p.staffName === EXCEL_GROUP_NAME || p.staffName === UNASSIGNED_GROUP_NAME;
+          const href = isGroup
+            ? "/permits"
+            : `/permits?staffName=${encodeURIComponent(p.staffName)}`;
 
           return (
             <Link
               key={p.staffName}
               href={active ? "/permits" : href}
               className={`rounded-2xl border p-4 transition hover:border-slate-400 ${
-                active ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"
+                active
+                  ? "border-slate-900 bg-slate-50"
+                  : isGroup
+                    ? "border-dashed border-slate-300 bg-slate-50"
+                    : "border-slate-200 bg-white"
               }`}
             >
               <div className="flex items-baseline justify-between">
@@ -62,6 +67,16 @@ export function StaffProgressBoard({ progress, activeStaffName }: Props) {
                 <div className="h-full bg-emerald-500" style={{ width: `${rate}%` }} />
               </div>
               <p className="mt-1 text-right text-xs text-slate-500">완료율 {rate}%</p>
+              {p.inProgressByStatus.length > 0 ? (
+                <ul className="mt-2 space-y-0.5 border-t border-slate-100 pt-2 text-xs text-slate-600">
+                  {p.inProgressByStatus.map((s) => (
+                    <li key={s.status} className="flex justify-between gap-2">
+                      <span className="truncate">{s.status}</span>
+                      <span className="shrink-0 font-medium text-amber-700">{s.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </Link>
           );
         })}

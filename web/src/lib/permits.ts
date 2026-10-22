@@ -217,33 +217,65 @@ export const completedStatuses: ReadonlySet<PermitStatus> = new Set<PermitStatus
   "직접방문수령",
 ]);
 
+// 엑셀 업로드 건은 상태 원문이 그대로 저장되므로 띄어쓰기 차이("이메일발송완료", "공문 발송")를 무시하고 비교한다.
+const completedStatusKeys = new Set([...completedStatuses].map((s) => s.replace(/\s/g, "")));
+
+export function isCompletedStatus(status: string): boolean {
+  return completedStatusKeys.has(status.replace(/\s/g, ""));
+}
+
+// 엑셀 업로드 건은 created_by가 업로드한 사람이라 실제 담당자를 알 수 없으므로 개인 집계에서 분리한다.
+export const EXCEL_GROUP_NAME = "엑셀 일괄등록";
+export const UNASSIGNED_GROUP_NAME = "미지정";
+
 export type StaffProgress = {
   staffName: string;
   inProgress: number;
   completed: number;
+  inProgressByStatus: { status: string; count: number }[];
 };
 
 export async function getStaffProgress(): Promise<StaffProgress[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("permit_records")
-    .select("status, profiles!created_by(name)");
+    .select("status, source_type, profiles!created_by(name)");
 
   if (error || !data) return [];
 
-  const byStaff = new Map<string, StaffProgress>();
-  for (const row of data as Pick<PermitRow, "status" | "profiles">[]) {
+  const byStaff = new Map<string, { completed: number; inProgress: Map<string, number> }>();
+  for (const row of data as Pick<PermitRow, "status" | "source_type" | "profiles">[]) {
     const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    const staffName = profile?.name ?? "미지정";
-    const entry = byStaff.get(staffName) ?? { staffName, inProgress: 0, completed: 0 };
-    if (completedStatuses.has(row.status as PermitStatus)) entry.completed += 1;
-    else entry.inProgress += 1;
+    const staffName =
+      row.source_type === "excel" ? EXCEL_GROUP_NAME : (profile?.name ?? UNASSIGNED_GROUP_NAME);
+    const entry = byStaff.get(staffName) ?? { completed: 0, inProgress: new Map<string, number>() };
+    const status = row.status.trim() || "(상태 없음)";
+    if (isCompletedStatus(status)) entry.completed += 1;
+    else entry.inProgress.set(status, (entry.inProgress.get(status) ?? 0) + 1);
     byStaff.set(staffName, entry);
   }
 
-  return [...byStaff.values()].sort(
-    (a, b) => b.inProgress - a.inProgress || a.staffName.localeCompare(b.staffName, "ko"),
-  );
+  return [...byStaff.entries()]
+    .map(([staffName, { completed, inProgress }]) => {
+      const inProgressByStatus = [...inProgress.entries()]
+        .map(([status, count]) => ({ status, count }))
+        .sort((a, b) => b.count - a.count);
+      return {
+        staffName,
+        completed,
+        inProgress: inProgressByStatus.reduce((sum, s) => sum + s.count, 0),
+        inProgressByStatus,
+      };
+    })
+    .sort((a, b) => {
+      const groupOrder = (name: string) =>
+        name === EXCEL_GROUP_NAME || name === UNASSIGNED_GROUP_NAME ? 1 : 0;
+      return (
+        groupOrder(a.staffName) - groupOrder(b.staffName) ||
+        b.inProgress - a.inProgress ||
+        a.staffName.localeCompare(b.staffName, "ko")
+      );
+    });
 }
 
 export type StatusHistory = {
