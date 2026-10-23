@@ -22,7 +22,7 @@ type DownloadResult = {
 };
 
 export function DeliberationClient({ permits, envReady }: Props) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 
   const [committeeNo, setCommitteeNo] = useState<string>("");
   const [hearingDate, setHearingDate] = useState<string>(today);

@@ -182,7 +182,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-slate-500">
-                    {new Date(user.created_at).toLocaleDateString("ko-KR")}
+                    {new Date(user.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">

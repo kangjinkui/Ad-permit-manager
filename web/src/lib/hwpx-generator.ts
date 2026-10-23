@@ -21,15 +21,10 @@ const KIND_TO_CHECK_CELL: Record<PermitKind, number> = {
 };
 
 function formatDate(dateStr: string | null): { year: string; month: string; day: string } {
-  if (!dateStr) {
-    const now = new Date();
-    return {
-      year: String(now.getFullYear()),
-      month: String(now.getMonth() + 1),
-      day: String(now.getDate()),
-    };
-  }
-  const [year, month, day] = dateStr.split("-");
+  // 서버(컨테이너)는 UTC라 오전 9시 전에는 전날로 계산되므로 한국 날짜를 기준으로 한다.
+  const [year, month, day] = (
+    dateStr || new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })
+  ).split("-");
   return { year, month: String(parseInt(month)), day: String(parseInt(day)) };
 }
 
