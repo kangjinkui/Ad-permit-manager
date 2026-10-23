@@ -224,8 +224,6 @@ export function isCompletedStatus(status: string): boolean {
   return completedStatusKeys.has(status.replace(/\s/g, ""));
 }
 
-// 엑셀 업로드 건은 created_by가 업로드한 사람이라 실제 담당자를 알 수 없으므로 개인 집계에서 분리한다.
-export const EXCEL_GROUP_NAME = "엑셀 일괄등록";
 export const UNASSIGNED_GROUP_NAME = "미지정";
 
 export type StaffProgress = {
@@ -245,9 +243,10 @@ export async function getStaffProgress(): Promise<StaffProgress[]> {
 
   const byStaff = new Map<string, { completed: number; inProgress: Map<string, number> }>();
   for (const row of data as Pick<PermitRow, "status" | "source_type" | "profiles">[]) {
+    // 엑셀 업로드 건은 created_by가 업로드한 사람이라 실제 담당자를 알 수 없으므로 집계에서 뺀다.
+    if (row.source_type === "excel") continue;
     const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    const staffName =
-      row.source_type === "excel" ? EXCEL_GROUP_NAME : (profile?.name ?? UNASSIGNED_GROUP_NAME);
+    const staffName = profile?.name ?? UNASSIGNED_GROUP_NAME;
     const entry = byStaff.get(staffName) ?? { completed: 0, inProgress: new Map<string, number>() };
     const status = row.status.trim() || "(상태 없음)";
     if (isCompletedStatus(status)) entry.completed += 1;
@@ -268,8 +267,7 @@ export async function getStaffProgress(): Promise<StaffProgress[]> {
       };
     })
     .sort((a, b) => {
-      const groupOrder = (name: string) =>
-        name === EXCEL_GROUP_NAME || name === UNASSIGNED_GROUP_NAME ? 1 : 0;
+      const groupOrder = (name: string) => (name === UNASSIGNED_GROUP_NAME ? 1 : 0);
       return (
         groupOrder(a.staffName) - groupOrder(b.staffName) ||
         b.inProgress - a.inProgress ||
