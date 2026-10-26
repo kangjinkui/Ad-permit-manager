@@ -11,6 +11,7 @@ import type { PermitWithStaff } from "@/lib/permits";
 import {
   calculateFeeResult,
   createDefaultFeeInput,
+  createDefaultWallGeneralSign,
   feeSignTypeOptions,
   formatWon,
   getCategoryDisplayLabel,
@@ -19,9 +20,11 @@ import {
   getSupportedFeeSignTypesForPermitKind,
   isFeeSignTypeCompatible,
   type FeeCalculationInput,
+  type FeeCalculationResult,
   type FeeSignType,
   type PublicFacilityFaceInput,
   type RooftopFaceInput,
+  type WallGeneralSignInput,
 } from "@/lib/fees";
 
 type Props = {
@@ -40,6 +43,20 @@ function toNumber(value: string): number {
 
 function findPermitById(permits: PermitWithStaff[], permitId: string) {
   return permits.find((permit) => permit.id === permitId) ?? null;
+}
+
+function updateWallGeneralSign(
+  input: FeeCalculationInput,
+  index: number,
+  patch: Partial<WallGeneralSignInput>,
+): FeeCalculationInput {
+  if (input.signType !== "wall_general") return input;
+  return {
+    ...input,
+    signs: input.signs.map((sign, signIndex) =>
+      signIndex === index ? { ...sign, ...patch } : sign,
+    ),
+  };
 }
 
 function updatePublicFacilityFace(
@@ -73,76 +90,147 @@ function updateRooftopFace(
 function renderFeeFields(
   input: FeeCalculationInput,
   setInput: Dispatch<SetStateAction<FeeCalculationInput>>,
+  result: FeeCalculationResult,
 ) {
   switch (input.signType) {
     case "wall_general":
       return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            구분
-            <select
-              className="field"
-              value={input.shapeType}
-              onChange={(event) =>
-                setInput({ ...input, shapeType: event.target.value as typeof input.shapeType })
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">간판별 입력</p>
+              <p className="text-sm text-slate-500">
+                한 건에 간판 여러 개를 함께 신청하면 간판을 추가하세요. 간판별로 따로 계산한 뒤 합계를 반영합니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() =>
+                setInput({ ...input, signs: [...input.signs, createDefaultWallGeneralSign()] })
               }
             >
-              <option value="판류형">판류형</option>
-              <option value="입체형">입체형</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            광고유형
-            <select
-              className="field"
-              value={input.adOwnerType}
-              onChange={(event) =>
-                setInput({ ...input, adOwnerType: event.target.value as typeof input.adOwnerType })
-              }
-            >
-              <option value="자사광고">자사광고</option>
-              <option value="타사광고">타사광고</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            조명유형
-            <select
-              className="field"
-              value={input.illuminationType}
-              onChange={(event) =>
-                setInput({
-                  ...input,
-                  illuminationType: event.target.value as typeof input.illuminationType,
-                })
-              }
-            >
-              <option value="비조명">비조명</option>
-              <option value="내부조명">내부조명</option>
-              <option value="외부조명">외부조명</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            가로 (m)
-            <input
-              className="field"
-              type="number"
-              min="0"
-              step="0.001"
-              value={input.width || ""}
-              onChange={(event) => setInput({ ...input, width: toNumber(event.target.value) })}
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            세로 (m)
-            <input
-              className="field"
-              type="number"
-              min="0"
-              step="0.001"
-              value={input.height || ""}
-              onChange={(event) => setInput({ ...input, height: toNumber(event.target.value) })}
-            />
-          </label>
+              간판 추가
+            </button>
+          </div>
+          {input.signs.map((sign, index) => {
+            const item = result.breakdown?.[index];
+            return (
+              <div
+                key={`wall-sign-${index}`}
+                className="flex flex-col gap-4 rounded-[24px] border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">{index + 1}번 간판</p>
+                  <div className="flex items-center gap-3">
+                    {item ? (
+                      <p className="text-xs text-slate-600">
+                        허가 {formatWon(item.permitFee)} · 내용변경 {formatWon(item.changeFee)} · 안전점검{" "}
+                        {formatWon(item.safetyFee)}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      disabled={input.signs.length <= 1}
+                      onClick={() =>
+                        setInput({
+                          ...input,
+                          signs: input.signs.filter((_, signIndex) => signIndex !== index),
+                        })
+                      }
+                    >
+                      간판 삭제
+                    </button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    구분
+                    <select
+                      className="field"
+                      value={sign.shapeType}
+                      onChange={(event) =>
+                        setInput((current) =>
+                          updateWallGeneralSign(current, index, {
+                            shapeType: event.target.value as typeof sign.shapeType,
+                          }),
+                        )
+                      }
+                    >
+                      <option value="판류형">판류형</option>
+                      <option value="입체형">입체형</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    광고유형
+                    <select
+                      className="field"
+                      value={sign.adOwnerType}
+                      onChange={(event) =>
+                        setInput((current) =>
+                          updateWallGeneralSign(current, index, {
+                            adOwnerType: event.target.value as typeof sign.adOwnerType,
+                          }),
+                        )
+                      }
+                    >
+                      <option value="자사광고">자사광고</option>
+                      <option value="타사광고">타사광고</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    조명유형
+                    <select
+                      className="field"
+                      value={sign.illuminationType}
+                      onChange={(event) =>
+                        setInput((current) =>
+                          updateWallGeneralSign(current, index, {
+                            illuminationType: event.target.value as typeof sign.illuminationType,
+                          }),
+                        )
+                      }
+                    >
+                      <option value="비조명">비조명</option>
+                      <option value="내부조명">내부조명</option>
+                      <option value="외부조명">외부조명</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    가로 (m)
+                    <input
+                      className="field"
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={sign.width || ""}
+                      onChange={(event) =>
+                        setInput((current) =>
+                          updateWallGeneralSign(current, index, { width: toNumber(event.target.value) }),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                    세로 (m)
+                    <input
+                      className="field"
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={sign.height || ""}
+                      onChange={(event) =>
+                        setInput((current) =>
+                          updateWallGeneralSign(current, index, { height: toNumber(event.target.value) }),
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     case "wall_large":
@@ -741,7 +829,7 @@ export function FeeCalculatorClient({ permits }: Props) {
             })}
           </div>
 
-          {renderFeeFields(input, setInput)}
+          {renderFeeFields(input, setInput, result)}
         </article>
       </section>
 

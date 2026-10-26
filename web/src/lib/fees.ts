@@ -30,13 +30,18 @@ export type RooftopFaceInput = {
   hasAd: boolean;
 };
 
-export type WallGeneralFeeInput = {
-  signType: "wall_general";
+export type WallGeneralSignInput = {
   shapeType: ShapeType;
   width: number;
   height: number;
   adOwnerType: AdOwnerType;
   illuminationType: IlluminationType;
+};
+
+// 한 건에 간판 여러 개를 함께 신청하는 경우, 간판별로 따로 계산해 합산한다.
+export type WallGeneralFeeInput = {
+  signType: "wall_general";
+  signs: WallGeneralSignInput[];
 };
 
 export type WallLargeFeeInput = {
@@ -91,6 +96,12 @@ export type FeeCalculationInput =
   | PublicFacilityFeeInput
   | RooftopFeeInput;
 
+export type FeeBreakdownItem = {
+  permitFee: number;
+  changeFee: number;
+  safetyFee: number;
+};
+
 export type FeeCalculationResult = {
   permitFee: number | null;
   changeFee: number | null;
@@ -102,6 +113,8 @@ export type FeeCalculationResult = {
   canApplyToPermit: boolean;
   errors: string[];
   warnings: string[];
+  // 간판별로 따로 계산한 경우의 개별 금액 (합계는 위 필드)
+  breakdown?: FeeBreakdownItem[];
 };
 
 export type FeeSignTypeOption = {
@@ -129,7 +142,7 @@ const SAFETY_UNKNOWN = "확인필요";
 export function createDefaultFeeInput(signType: FeeSignType): FeeCalculationInput {
   switch (signType) {
     case "wall_general":
-      return { signType, shapeType: "판류형", width: 0, height: 0, adOwnerType: "자사광고", illuminationType: "비조명" };
+      return { signType, signs: [createDefaultWallGeneralSign()] };
     case "wall_large":
       return { signType, width: 0, height: 0, adOwnerType: "자사광고", permitIlluminationType: "비조명", safetyIlluminationType: "비조명" };
     case "banner_frame_general":
@@ -143,6 +156,10 @@ export function createDefaultFeeInput(signType: FeeSignType): FeeCalculationInpu
     case "rooftop_large":
       return { signType, faces: [{ width: 0, panelHeight: 0, extraHeightForSafety: 0, illuminationType: "비조명", hasAd: true }] };
   }
+}
+
+export function createDefaultWallGeneralSign(): WallGeneralSignInput {
+  return { shapeType: "판류형", width: 0, height: 0, adOwnerType: "자사광고", illuminationType: "비조명" };
 }
 
 export function getFeeSignTypeLabel(signType: FeeSignType): string {
@@ -296,12 +313,14 @@ function buildResult(
   context: FeeContext,
   errors: string[] = [],
   warnings: string[] = [],
+  breakdown?: FeeBreakdownItem[],
 ): FeeCalculationResult {
   if (errors.length > 0) {
     return { permitFee: null, changeFee: null, safetyFee: null, totalFee: null, appliedPermitFee: null, appliedSafetyFee: null, appliedTotalFee: null, canApplyToPermit: false, errors, warnings };
   }
 
-  const changeFee = deriveChangeFee(permitFee);
+  // 간판별로 계산한 경우 내용변경수수료도 간판별 절사 후 합산한다.
+  const changeFee = breakdown ? sum(breakdown.map((item) => item.changeFee)) : deriveChangeFee(permitFee);
   const totalFee = permitFee !== null || safetyFee !== null ? (permitFee ?? 0) + (safetyFee ?? 0) : null;
   const appliedPermitFee = isChangeCategory(context.category) ? changeFee : permitFee;
   let appliedSafetyFee: number | null = safetyFee;
@@ -323,18 +342,27 @@ function buildResult(
       ? null
       : (appliedPermitFee ?? 0) + (appliedSafetyFee ?? 0);
 
-  return { permitFee, changeFee, safetyFee, totalFee, appliedPermitFee, appliedSafetyFee, appliedTotalFee, canApplyToPermit, errors, warnings };
+  return { permitFee, changeFee, safetyFee, totalFee, appliedPermitFee, appliedSafetyFee, appliedTotalFee, canApplyToPermit, errors, warnings, breakdown };
+}
+
+function calculateWallGeneralSign(sign: WallGeneralSignInput): FeeBreakdownItem {
+  const area = sign.width * sign.height;
+  const calculatedArea = sign.shapeType === "입체형" ? safeRoundArea(area * 0.7) : safeRoundArea(area);
+  const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, sign.adOwnerType), sign.illuminationType);
+  const safetyFee = applySafetySurcharge(applyLightingFee(getWallSafetyBaseFee(calculatedArea), sign.illuminationType));
+  return { permitFee, changeFee: roundDownToThousand(permitFee / 2), safetyFee };
 }
 
 export function calculateFeeResult(input: FeeCalculationInput, context: FeeContext = {}): FeeCalculationResult {
   switch (input.signType) {
     case "wall_general": {
-      if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, context, ["가로와 세로를 모두 입력하세요."]);
-      const area = input.width * input.height;
-      const calculatedArea = input.shapeType === "입체형" ? safeRoundArea(area * 0.7) : safeRoundArea(area);
-      const permitFee = applyLightingFee(getWallPermitBaseFee(calculatedArea, input.adOwnerType), input.illuminationType);
-      const safetyFee = applySafetySurcharge(applyLightingFee(getWallSafetyBaseFee(calculatedArea), input.illuminationType));
-      return buildResult(permitFee, safetyFee, context);
+      if (input.signs.length === 0) return buildResult(null, null, context, ["최소 한 개 이상의 간판을 입력하세요."]);
+      const invalidSign = input.signs.some((sign) => !hasPositiveNumber(sign.width) || !hasPositiveNumber(sign.height));
+      if (invalidSign) return buildResult(null, null, context, ["모든 간판의 가로와 세로를 입력하세요."]);
+      const breakdown = input.signs.map(calculateWallGeneralSign);
+      const permitFee = sum(breakdown.map((item) => item.permitFee));
+      const safetyFee = sum(breakdown.map((item) => item.safetyFee));
+      return buildResult(permitFee, safetyFee, context, [], [], breakdown);
     }
     case "wall_large": {
       if (!hasPositiveNumber(input.width) || !hasPositiveNumber(input.height)) return buildResult(null, null, context, ["가로와 세로를 모두 입력하세요."]);
