@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
-import { bulkDeletePermits } from "@/app/permits/actions";
+import { bulkDeletePermits, bulkUpdatePermitStatus } from "@/app/permits/actions";
+import { permitStatuses } from "@/lib/mock-data";
 import type { PermitWithStaff } from "@/lib/permits";
 
 const statusTone: Record<string, string> = {
@@ -27,7 +28,13 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
   const searchParams = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const [isStatusPending, startStatusTransition] = useTransition();
   const [page, setPage] = useState(1);
+  const [newStatus, setNewStatus] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
+
+  // 필터를 바꾸면 화면에 없는 건이 선택에 남을 수 있으므로 현재 목록에 있는 건만 대상으로 삼는다.
+  const selectedPermits = permits.filter((p) => selected.has(p.id));
 
   const totalPages = Math.max(1, Math.ceil(permits.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -53,9 +60,8 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
     });
   }
 
-  function handlePageChange(p: number) {
-    setPage(p);
-    setSelected(new Set());
+  function selectAllResults() {
+    setSelected(new Set(permits.map((p) => p.id)));
   }
 
   function toggleOne(id: string) {
@@ -70,8 +76,45 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
     });
   }
 
+  function handleBulkStatusChange() {
+    if (selectedPermits.length === 0 || !newStatus) return;
+
+    const countByStatus = new Map<string, number>();
+    selectedPermits.forEach((p) => {
+      countByStatus.set(p.status, (countByStatus.get(p.status) ?? 0) + 1);
+    });
+    const breakdown = [...countByStatus.entries()]
+      .map(([status, count]) => `${status} ${count}건`)
+      .join(", ");
+
+    const confirmed = confirm(
+      `선택한 ${selectedPermits.length}건의 상태를 "${newStatus}"(으)로 변경하시겠습니까?\n현재 상태: ${breakdown}`,
+    );
+    if (!confirmed) return;
+
+    const ids = selectedPermits.map((p) => p.id);
+    const targetStatus = newStatus;
+    startStatusTransition(async () => {
+      const result = await bulkUpdatePermitStatus(ids, targetStatus);
+      if (result.error) {
+        alert(`상태 변경 중 오류가 발생했습니다 (${result.updated}건 변경됨): ${result.error}`);
+        router.refresh();
+        return;
+      }
+
+      setSelected(new Set());
+      setNewStatus("");
+      router.refresh();
+      setToast(
+        `${result.updated}건의 상태를 "${targetStatus}"(으)로 변경했습니다.` +
+          (result.skipped > 0 ? ` (이미 같은 상태 ${result.skipped}건 제외)` : ""),
+      );
+      setTimeout(() => setToast(null), 3000);
+    });
+  }
+
   function handleBulkDelete() {
-    const ids = Array.from(selected);
+    const ids = selectedPermits.map((p) => p.id);
     if (ids.length === 0) return;
 
     const confirmed = confirm(
@@ -93,21 +136,49 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
 
   return (
     <>
-      {canDelete && selected.size > 0 && (
-        <div className="mt-4 flex items-center gap-3">
-          <span className="text-sm text-slate-600">{selected.size}건 선택됨</span>
-          <button
-            onClick={handleBulkDelete}
-            disabled={isPending}
-            className="rounded-[20px] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
-          >
-            {isPending ? "삭제 중..." : "선택 삭제"}
-          </button>
+      {canDelete && selectedPermits.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-slate-600">{selectedPermits.length}건 선택됨</span>
+          {selectedPermits.length < permits.length && (
+            <button
+              onClick={selectAllResults}
+              className="rounded-[20px] border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              조회된 {permits.length}건 모두 선택
+            </button>
+          )}
           <button
             onClick={() => setSelected(new Set())}
             className="rounded-[20px] border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
           >
             선택 해제
+          </button>
+          <select
+            aria-label="변경할 상태"
+            value={newStatus}
+            onChange={(e) => setNewStatus(e.target.value)}
+            className="field max-w-60"
+          >
+            <option value="">변경할 상태 선택</option>
+            {permitStatuses.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkStatusChange}
+            disabled={!newStatus || isStatusPending || isPending}
+            className="rounded-[20px] bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
+          >
+            {isStatusPending ? "변경 중..." : "상태 일괄 변경"}
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            disabled={isPending || isStatusPending}
+            className="ml-auto rounded-[20px] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+          >
+            {isPending ? "삭제 중..." : "선택 삭제"}
           </button>
         </div>
       )}
@@ -202,7 +273,7 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
           </span>
           <div className="flex gap-1">
             <button
-              onClick={() => handlePageChange(currentPage - 1)}
+              onClick={() => setPage(currentPage - 1)}
               disabled={currentPage === 1}
               className="rounded-[8px] border border-slate-200 px-3 py-1.5 hover:bg-slate-50 disabled:opacity-40"
             >
@@ -211,7 +282,7 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <button
                 key={p}
-                onClick={() => handlePageChange(p)}
+                onClick={() => setPage(p)}
                 className={`rounded-[8px] border px-3 py-1.5 ${
                   p === currentPage
                     ? "border-slate-800 bg-slate-800 text-white"
@@ -222,13 +293,23 @@ export function PermitsTableClient({ permits, canDelete }: Props) {
               </button>
             ))}
             <button
-              onClick={() => handlePageChange(currentPage + 1)}
+              onClick={() => setPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="rounded-[8px] border border-slate-200 px-3 py-1.5 hover:bg-slate-50 disabled:opacity-40"
             >
               다음
             </button>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 rounded-[20px] bg-slate-900 px-5 py-4 text-sm font-medium text-white shadow-xl"
+        >
+          {toast}
         </div>
       )}
     </>
