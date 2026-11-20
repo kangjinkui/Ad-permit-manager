@@ -33,6 +33,7 @@ Thumbs.db
 *.xlsx
 *.xlsm
 !web/public/templates/*.hwpx
+!web/templates/review/T0[1-9].hwpx
 
 # oh-my-claudecode runtime state
 .omc/

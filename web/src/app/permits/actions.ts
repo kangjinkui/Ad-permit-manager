@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
 import { permitStatuses, type PermitStatus } from "@/lib/mock-data";
+import { cleanupReviewAttachments, isPermitReviewAttachmentConstraint } from "@/lib/permit-review-store";
 
 // .in() 필터는 URL에 실리므로 전체 선택 시 길이 제한을 넘지 않도록 나눠서 처리한다.
 const BULK_CHUNK_SIZE = 200;
@@ -88,10 +89,17 @@ export async function bulkDeletePermits(permitIds: string[]) {
       .eq("permit_no", id);
   }
 
-  const { error } = await supabase
-    .from("permit_records")
-    .delete()
-    .in("record_no", permitIds);
+  const removePermits = () => supabase.from("permit_records").delete().in("record_no", permitIds);
+  let { error } = await removePermits();
+  if (isPermitReviewAttachmentConstraint(error)) {
+    try {
+      for (const id of permitIds) await cleanupReviewAttachments(id);
+      ({ error } = await removePermits());
+    } catch (cleanupError) {
+      console.error("bulkDeletePermits review attachment cleanup failed", cleanupError);
+      return { error: "검토서 첨부 사진을 정리하지 못했습니다. 다시 시도하세요." };
+    }
+  }
 
   if (error) {
     console.error("bulkDeletePermits error:", error.message);

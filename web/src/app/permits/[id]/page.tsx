@@ -10,6 +10,7 @@ import { updateStatus, updatePermit, updateNotes } from "./actions";
 import { DeleteButton } from "./delete-button";
 import { FormWithToast } from "@/components/form-with-toast";
 import { SignSpecificationFields } from "@/components/sign-specification-fields";
+import { supportsPermitReview } from "@/lib/permit-review";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -170,10 +171,18 @@ export default async function PermitDetailPage({ params, searchParams }: PagePro
               )}
             </div>
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <button type="submit" className="button-primary" disabled={!envReady}>
                 저장
               </button>
+              {supportsPermitReview(permit.kind, permit.category) ? (
+                <Link
+                  href={`/permits/${encodeURIComponent(permit.id)}/review`}
+                  className="button-secondary"
+                >
+                  검토서 작성
+                </Link>
+              ) : null}
             </div>
           </article>
         </FormWithToast>

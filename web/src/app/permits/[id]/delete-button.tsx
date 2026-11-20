@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { deletePermit } from "./actions";
 
 type Props = {
@@ -8,12 +9,16 @@ type Props = {
 };
 
 export function DeleteButton({ permitId, advertiser }: Props) {
+  const [error, setError] = useState<string>();
+
   async function handleDelete(formData: FormData) {
     const confirmed = confirm(
       `[${permitId}] ${advertiser} 항목을 삭제하시겠습니까?\n이력을 포함한 모든 데이터가 영구 삭제됩니다.`,
     );
     if (!confirmed) return;
-    await deletePermit(formData);
+    setError(undefined);
+    const result = await deletePermit(formData);
+    if (result?.error) setError(result.error);
   }
 
   return (
@@ -25,6 +30,7 @@ export function DeleteButton({ permitId, advertiser }: Props) {
       >
         삭제
       </button>
+      {error ? <p role="alert" className="mt-2 text-sm text-rose-700">{error}</p> : null}
     </form>
   );
 }

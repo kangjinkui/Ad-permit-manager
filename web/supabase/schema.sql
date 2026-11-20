@@ -113,6 +113,37 @@ create table if not exists public.fee_calculations (
   created_at           timestamptz not null default now()
 );
 
+create table if not exists public.permit_reviews (
+  id               uuid primary key default gen_random_uuid(),
+  permit_record_no text not null unique
+                     references public.permit_records(record_no) on delete cascade,
+  template_id      text check (template_id is null or template_id in (
+                     'T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09'
+                   )),
+  draft            jsonb not null default '{"fields":{},"checks":{}}'::jsonb
+                     check (jsonb_typeof(draft) = 'object'),
+  template_version integer not null default 1 check (template_version > 0),
+  version          uuid not null default gen_random_uuid(),
+  created_by       uuid not null references public.profiles(id),
+  updated_by       uuid not null references public.profiles(id),
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create table if not exists public.permit_review_attachments (
+  id            uuid primary key default gen_random_uuid(),
+  review_id     uuid not null references public.permit_reviews(id) on delete restrict,
+  object_path   text not null unique,
+  original_name text not null check (length(trim(original_name)) between 1 and 255),
+  content_type  text not null check (content_type in ('image/jpeg', 'image/png', 'image/webp')),
+  size_bytes    bigint not null check (size_bytes between 1 and 5242880),
+  state         text not null default 'pending' check (state in ('pending', 'ready')),
+  created_by    uuid not null references public.profiles(id),
+  created_at    timestamptz not null default now(),
+  check (object_path = review_id::text || '/' || id::text || case content_type
+    when 'image/jpeg' then '.jpg' when 'image/png' then '.png' else '.webp' end)
+);
+
 create index if not exists permit_records_status_idx
   on public.permit_records(status);
 
@@ -136,6 +167,9 @@ create index if not exists fee_calculations_permit_record_no_idx
 
 create index if not exists fee_calculations_created_by_idx
   on public.fee_calculations(created_by, created_at desc);
+
+create index if not exists permit_review_attachments_review_id_idx
+  on public.permit_review_attachments(review_id, created_at);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -188,11 +222,18 @@ create trigger permit_records_set_updated_at
   before update on public.permit_records
   for each row execute procedure public.set_updated_at();
 
+drop trigger if exists permit_reviews_set_updated_at on public.permit_reviews;
+create trigger permit_reviews_set_updated_at
+  before update on public.permit_reviews
+  for each row execute procedure public.set_updated_at();
+
 alter table public.profiles enable row level security;
 alter table public.permit_records enable row level security;
 alter table public.permit_status_history enable row level security;
 alter table public.activity_logs enable row level security;
 alter table public.fee_calculations enable row level security;
+alter table public.permit_reviews enable row level security;
+alter table public.permit_review_attachments enable row level security;
 
 -- profiles: 인증된 사용자는 모든 프로필 읽기 가능
 create policy "authenticated users can read profiles"
@@ -353,5 +394,183 @@ create policy "active users can insert fee calculations"
     exists (
       select 1 from public.profiles
       where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can read permit reviews"
+  on public.permit_reviews for select to authenticated
+  using (
+    exists (
+      select 1 from public.permit_records p
+      where p.record_no = permit_reviews.permit_record_no
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can insert permit reviews"
+  on public.permit_reviews for insert to authenticated
+  with check (
+    created_by = (select auth.uid())
+    and updated_by = (select auth.uid())
+    and exists (
+      select 1 from public.permit_records p
+      where p.record_no = permit_reviews.permit_record_no
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can update permit reviews"
+  on public.permit_reviews for update to authenticated
+  using (
+    exists (
+      select 1 from public.permit_records p
+      where p.record_no = permit_reviews.permit_record_no
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  )
+  with check (
+    updated_by = (select auth.uid())
+    and exists (
+      select 1 from public.permit_records p
+      where p.record_no = permit_reviews.permit_record_no
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can read review attachments"
+  on public.permit_review_attachments for select to authenticated
+  using (
+    exists (
+      select 1 from public.permit_reviews r
+      join public.permit_records p on p.record_no = r.permit_record_no
+      where r.id = permit_review_attachments.review_id
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "uploaders can finalize review attachments"
+  on public.permit_review_attachments for update to authenticated
+  using (
+    state = 'pending'
+    and created_by = (select auth.uid())
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  )
+  with check (
+    state = 'ready'
+    and created_by = (select auth.uid())
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can insert review attachments"
+  on public.permit_review_attachments for insert to authenticated
+  with check (
+    state = 'pending'
+    and created_by = (select auth.uid())
+    and exists (
+      select 1 from public.permit_reviews r
+      join public.permit_records p on p.record_no = r.permit_record_no
+      where r.id = permit_review_attachments.review_id
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+create policy "active users can delete review attachments"
+  on public.permit_review_attachments for delete to authenticated
+  using (
+    exists (
+      select 1 from public.permit_reviews r
+      join public.permit_records p on p.record_no = r.permit_record_no
+      where r.id = permit_review_attachments.review_id
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and status = 'active'
+    )
+  );
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'permit-review-attachments',
+  'permit-review-attachments',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+-- Upload and remove operations also read object rows. The uploader can see pending
+-- objects, and staff can see abandoned pending rows when cleaning up a permit.
+create policy "active users can read review attachment objects"
+  on storage.objects for select to authenticated
+  using (
+    storage.objects.bucket_id = 'permit-review-attachments'
+    and exists (
+      select 1
+      from public.permit_review_attachments a
+      join public.permit_reviews r on r.id = a.review_id
+      join public.permit_records p on p.record_no = r.permit_record_no
+      join public.profiles profile on profile.id = (select auth.uid())
+      where a.object_path = storage.objects.name
+        and (a.state = 'ready' or a.created_by = (select auth.uid())
+             or a.created_at < now() - interval '15 minutes')
+        and profile.status = 'active'
+    )
+  );
+
+create policy "active users can upload review attachment objects"
+  on storage.objects for insert to authenticated
+  with check (
+    storage.objects.bucket_id = 'permit-review-attachments'
+    and exists (
+      select 1
+      from public.permit_review_attachments a
+      join public.permit_reviews r on r.id = a.review_id
+      join public.permit_records p on p.record_no = r.permit_record_no
+      join public.profiles profile on profile.id = (select auth.uid())
+      where a.object_path = storage.objects.name
+        and a.created_by = (select auth.uid())
+        and a.state = 'pending'
+        and profile.status = 'active'
+    )
+  );
+
+create policy "active users can delete review attachment objects"
+  on storage.objects for delete to authenticated
+  using (
+    storage.objects.bucket_id = 'permit-review-attachments'
+    and exists (
+      select 1
+      from public.permit_review_attachments a
+      join public.permit_reviews r on r.id = a.review_id
+      join public.permit_records p on p.record_no = r.permit_record_no
+      join public.profiles profile on profile.id = (select auth.uid())
+      where a.object_path = storage.objects.name and profile.status = 'active'
     )
   );

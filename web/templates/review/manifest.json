@@ -1,0 +1,445 @@
+{
+    "version":  1,
+    "sourceSha256":  "0cee3548fe0928a480f874dfcf6720cc223c4c8b6567dd265e665093690661fc",
+    "templates":  {
+                      "T01":  {
+                                  "file":  "T01.hwpx",
+                                  "sha256":  "bb7f1f9472ae99f2a3dc49ae2ac55a8de9623d4a32e6eb51b4aeaba6e548061d",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "지 역",
+                                                     "standardText":  "○ 상업지역, 공업지역 기타지역(자사건물일 경우 가능)"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "건 물",
+                                                     "standardText":  "○ 5층 이상 15층 이하 건물 (영15조3호 가목) ○ 16층 이상 건물에 건물명이나, 자사광고를 입체형 또는 도료로 직접 표시하는 경우 (시행령 제15조 제4호 가목)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "규 격",
+                                                     "standardText":  "○ 가로 : 30m 이내 면적합계 : 1천50제곱미터 이내 높이 : 건물높이 1/2 이내로 최고 15m 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개(상업지역)"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 백열등, 형광등 사용 시, 간판의 외부에 직접 노출되지 않도록 함 ○ 빛이 점멸하거나 동영상 변화가 있는 광고물을 차량진행방향 정면으로 표시하는 경우, 지면으로부터 10m 이상 이격, 교통신호기로부터 직선거리 30m 이내 경우 지면으로부터 15m 이상 이격(영 제14조3항, 4항)"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "이격거리",
+                                                     "standardText":  "○ 옥상간판 수평거리 50m 이상 유지 (전자식 전광판은 수평거리 200m 이상)"
+                                                 }
+                                             ]
+                              },
+                      "T02":  {
+                                  "file":  "T02.hwpx",
+                                  "sha256":  "40b2b1c056b7b68036d37f5c2e3d36898e20344d0280d07190d63e5c66430a5d",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료 시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 3층이하 : 정면원칙 (곡각지점 제외) ○ 4층이상 건물상단 : 3면 가능"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 건물 1층 : 입체 또는 판류형 ○ 건물 2층이상 : 입체형"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 ○ 건물상단 3면에 각 1개"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 11층 이상 건물상단(가로로 표시할 경우) - 가로크기 : 건 물 최상단 건물 가로폭의 1/2 이내 - 세로크기 : 최대 3m 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 벽면으로부터 30cm 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 전기배선은 외부에 노출되지 않아야 함"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "창문차폐 여 부",
+                                                     "standardText":  "○ 창문 차폐 불가"
+                                                 }
+                                             ]
+                              },
+                      "T03":  {
+                                  "file":  "T03.hwpx",
+                                  "sha256":  "c58b53065811cf3b0fa7459e9de98f9dad344d0a66db02d51e4e2ffbd049abd7",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료 시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 3층이하 : 정면원칙 (곡각지점 제외) ○ 4층이상 건물상단 : 3면 가능"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 건물 1층 : 입체 또는 판류형 ○ 건물 2층이상 : 입체형"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 ○ 건물상단 3면에 각 1개"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 11층 이상 건물상단(가로로 표시할 경우) - 가로크기 : 건 물 최상단 건물 가로폭의 1/2 이내 - 세로크기 : 최대 3m 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 벽면으로부터 30cm 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 전기배선은 외부에 노출되지 않아야 함"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "창문차폐 여 부",
+                                                     "standardText":  "○ 창문 차폐 불가"
+                                                 }
+                                             ]
+                              },
+                      "T04":  {
+                                  "file":  "T04.hwpx",
+                                  "sha256":  "2bff2e0ca92683dba46408132271b6bab43596ae73205476aa9fcd1f77d2b78f",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 가로 : 간판의 바깥쪽 끝부분의 돌출폭은 벽면으로 부터 1M 이내 ○ 세로 : 3M 이내 ○ 두께 : 30cm이내"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 5층이상 건물 : 5층 이하 ○ 4층 이하건물 : 건물 벽면높이 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 (곡각지점제외)"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "간판의 아랫부분과 지면과의 간격",
+                                                     "standardText":  "○ 지면으로부터 3M 이상 (인도 없을 시 4M이상)"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 백열등 및 형광등 사용 시 외부 노출 금지"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "도로점용",
+                                                     "standardText":  "○ 도로선 수직공간 돌출부분"
+                                                 }
+                                             ]
+                              },
+                      "T05":  {
+                                  "file":  "T05.hwpx",
+                                  "sha256":  "44c631e6da54bf12539ac527686d699127dd09e39497679a2d2eac9171984227",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료 시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 3층이하 : 정면원칙 (곡각지점 제외) ○ 4층이상 건물상단 : 3면 가능"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 건물 1층 : 입체 또는 판류형 ○ 건물 2층이상 : 입체형"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 ○ 건물상단 3면에 각 1개"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 10층 이하 상단간판 - 가로로 표시 : 가로 건물폭 1/2이내, 세로 4층 0.6M기준으로 1층 증가시 마다 0.1M 씩 증가 최대 1.2m이내 - 세 로로 표시 : 가 로 4층 0.6M기준으로 1층 증가시 마다 0.1M 씩 증가 , 세로 건물폭 1/2이내"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 벽면으로부터 30cm 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 전기배선은 외부에 노출되지 않아야 함"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "창문차폐 여 부",
+                                                     "standardText":  "○ 창문 차폐 불가"
+                                                 }
+                                             ]
+                              },
+                      "T06":  {
+                                  "file":  "T06.hwpx",
+                                  "sha256":  "bdbde9db020ebcf2db85768039cbdcc49becd55dbf717b9aab7cb2ec1aa2cc58",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역, 준주거지역, 일반주거지역, 전용주거지역"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 입간판"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 건물(영업점)의 부지 1M 이내 설치"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 자사광고에 한하여 표시가능"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 업소별 1개 (간판 총수량에 미포함)"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 간판 높이 - 지면으로부터 1.2M이내 ○ 간판면적 - 1면의 면적은 0.6㎡ 이내, 합계면적은 1.2㎡ 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 보행자 통행로에는 설치금지"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 입간판은 비조명"
+                                                 }
+                                             ]
+                              },
+                      "T07":  {
+                                  "file":  "T07.hwpx",
+                                  "sha256":  "c151d212ba2db193846629cf3e14737c2d4308cd8b2f9e1c3af3663c87c28d02",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료 시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 3층이하 : 정면원칙(곡각지점 제외) ○ 4층이상 건물상단 : 3면 가능"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 건물 1층 : 입체 또는 판류형 ○ 건물 2층이상 : 입체형"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 ○ 건물상단 3면에 각 1개"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 5 층 이하 : 가로 업소폭 80%이내 - 판류형 : 세로 0.8m내 - 입체형 : 세로 0.45m이내"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 벽면으로부터 30cm 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 전기배선은 외부에 노출되지 않아야 함"
+                                                 },
+                                                 {
+                                                     "key":  "row10",
+                                                     "label":  "창문차폐 여 부",
+                                                     "standardText":  "○ 창문 차폐 불가"
+                                                 }
+                                             ]
+                              },
+                      "T08":  {
+                                  "file":  "T08.hwpx",
+                                  "sha256":  "ea715c4afac57682f652f8846726991d0b67d24665904cc000424c91eea15bc6",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료 시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 3층이하 : 정면원칙(곡각지점 제외) ○ 4층이상 건물상단 : 3면 가능"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "형 태",
+                                                     "standardText":  "○ 건물 1층 : 입체 또는 판류형 ○ 건물 2층이상 : 입체형"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 ○ 건물상단 3면에 각 1개"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 5 층 이하 : 가로 업소폭 80%이내 - 판류형 : 세로 0.8m내 - 입체형 : 세로 0.45m이내"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "돌 출 폭",
+                                                     "standardText":  "○ 벽면으로부터 30cm 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 전기배선은 외부에 노출되지 않아야 함"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "창문차폐 여 부",
+                                                     "standardText":  "○ 창문 차폐 불가"
+                                                 },
+                                                 {
+                                                     "key":  "row10",
+                                                     "label":  "안전점검",
+                                                     "standardText":  "○ 안전점검 결과와 검사일을 확인"
+                                                 }
+                                             ]
+                              },
+                      "T09":  {
+                                  "file":  "T09.hwpx",
+                                  "sha256":  "dedbbe02e72b6976bec7f296c146479d0d529154e8128c1e3390295406c6e3ab",
+                                  "checks":  [
+                                                 {
+                                                     "key":  "row1",
+                                                     "label":  "「국토의 계획 및 이용에 관한 법률」에 따른 지역",
+                                                     "standardText":  "○ 상업지역․공업지역 및 준주거지역 : 2개 이하 ○ 그 외 : 1개 이하"
+                                                 },
+                                                 {
+                                                     "key":  "row2",
+                                                     "label":  "광고유형",
+                                                     "standardText":  "○ 자사광고(영업․근무 종료시에 소등) ○ 타사광고(자정에 소등)"
+                                                 },
+                                                 {
+                                                     "key":  "row3",
+                                                     "label":  "규 격(M)",
+                                                     "standardText":  "○ 가로 : 간판의 바깥쪽 끝부분의 돌출폭은 벽면으로 부터 1M 이내 ○ 세로 : 3M 이내 ○ 두께 : 30cm이내"
+                                                 },
+                                                 {
+                                                     "key":  "row4",
+                                                     "label":  "위 치",
+                                                     "standardText":  "○ 5층이상 건물 : 5층 이하 ○ 4층 이하건물 : 건물 벽면높이 이내"
+                                                 },
+                                                 {
+                                                     "key":  "row5",
+                                                     "label":  "수 량",
+                                                     "standardText":  "○ 1업소 1개 (곡각지점제외)"
+                                                 },
+                                                 {
+                                                     "key":  "row6",
+                                                     "label":  "간판의 아랫부분과 지면과의 간격",
+                                                     "standardText":  "○ 지면으로부터 3M 이상 (인도 없을 시 4M이상)"
+                                                 },
+                                                 {
+                                                     "key":  "row7",
+                                                     "label":  "조명설치",
+                                                     "standardText":  "○ 백열등 및 형광등 사용 시 외부 노출 금지"
+                                                 },
+                                                 {
+                                                     "key":  "row8",
+                                                     "label":  "도로점용",
+                                                     "standardText":  "○ 도로선 수직공간 돌출부분"
+                                                 },
+                                                 {
+                                                     "key":  "row9",
+                                                     "label":  "안전점검",
+                                                     "standardText":  "○ 대상 (면적 1㎡ 이상 돌출간판)"
+                                                 }
+                                             ]
+                              }
+                  }
+}

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
 import { getPermitSpecificationPayload } from "@/lib/sign-faces";
+import { cleanupReviewAttachments, isPermitReviewAttachmentConstraint } from "@/lib/permit-review-store";
 
 export async function updateStatus(formData: FormData) {
   const profile = await requireStaff();
@@ -116,14 +117,21 @@ export async function deletePermit(formData: FormData) {
     .delete()
     .eq("permit_no", permitNo);
 
-  const { error } = await supabase
-    .from("permit_records")
-    .delete()
-    .eq("record_no", permitNo);
+  const removePermit = () => supabase.from("permit_records").delete().eq("record_no", permitNo);
+  let { error } = await removePermit();
+  if (isPermitReviewAttachmentConstraint(error)) {
+    try {
+      await cleanupReviewAttachments(permitNo);
+      ({ error } = await removePermit());
+    } catch (cleanupError) {
+      console.error("deletePermit review attachment cleanup failed", cleanupError);
+      return { error: "검토서 첨부 사진을 정리하지 못했습니다. 다시 시도하세요." };
+    }
+  }
 
   if (error) {
     console.error("deletePermit error:", error.message);
-    return;
+    return { error: "허가 건을 삭제하지 못했습니다. 다시 시도하세요." };
   }
 
   revalidatePath("/permits");
