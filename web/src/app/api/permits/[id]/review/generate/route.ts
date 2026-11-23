@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const missing = getReviewDownloadError(selected.templateId, normalized.draft.fields);
     if (missing) return reviewError(missing, 422);
 
-    const attachments = await listReviewAttachments(id);
+    const attachments = permit.category === "내용변경" ? await listReviewAttachments(id) : [];
     const file = await generatePermitReviewHwpx(selected.templateId, normalized.draft, attachments.map(({ name }) => name));
     return new Response(file, {
       headers: downloadHeaders(`옥외광고물_검토서_${id}.hwpx`, "application/hwp+zip"),

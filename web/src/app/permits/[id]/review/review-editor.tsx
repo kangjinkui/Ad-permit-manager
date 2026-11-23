@@ -701,7 +701,7 @@ export function ReviewEditor({
           첨부 사진
         </h2>
         <p className="mt-2 text-sm text-slate-500">
-          초안을 저장한 뒤 사진을 첨부할 수 있습니다. 문서에는 첨부 파일명이 목록으로 표시됩니다.
+          초안을 저장한 뒤 사진을 첨부할 수 있습니다. 내용변경 검토서에는 첨부 파일명이 표시됩니다.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <input

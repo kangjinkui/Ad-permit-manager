@@ -40,7 +40,7 @@
                               },
                       "T02":  {
                                   "file":  "T02.hwpx",
-                                  "sha256":  "40b2b1c056b7b68036d37f5c2e3d36898e20344d0280d07190d63e5c66430a5d",
+                                  "sha256":  "4fd7af3942a2ec78162d644b85bd05759aabfb711d05c57e358859cb0e8cfa72",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -91,7 +91,7 @@
                               },
                       "T03":  {
                                   "file":  "T03.hwpx",
-                                  "sha256":  "c58b53065811cf3b0fa7459e9de98f9dad344d0a66db02d51e4e2ffbd049abd7",
+                                  "sha256":  "92408ade28cc5b048e36e6cb1159dd00f0b81b983604caf87d482853743636a1",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -142,7 +142,7 @@
                               },
                       "T04":  {
                                   "file":  "T04.hwpx",
-                                  "sha256":  "2bff2e0ca92683dba46408132271b6bab43596ae73205476aa9fcd1f77d2b78f",
+                                  "sha256":  "0788790433d4c8425367e04f39a64230c97139a45cb9ecfeb6989b22f39dd92c",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -188,7 +188,7 @@
                               },
                       "T05":  {
                                   "file":  "T05.hwpx",
-                                  "sha256":  "44c631e6da54bf12539ac527686d699127dd09e39497679a2d2eac9171984227",
+                                  "sha256":  "a589618a26cda15f20da7a6323856d58be9a4a746c2a18f996f62e21182b6cd5",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -239,7 +239,7 @@
                               },
                       "T06":  {
                                   "file":  "T06.hwpx",
-                                  "sha256":  "bdbde9db020ebcf2db85768039cbdcc49becd55dbf717b9aab7cb2ec1aa2cc58",
+                                  "sha256":  "b33802824a9331472bc039e8cfec0d57a6335e673fa7f9dfeec179b76a2fcfcd",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -285,7 +285,7 @@
                               },
                       "T07":  {
                                   "file":  "T07.hwpx",
-                                  "sha256":  "c151d212ba2db193846629cf3e14737c2d4308cd8b2f9e1c3af3663c87c28d02",
+                                  "sha256":  "37a1171211dc6976f3a89f290c0044b28a59fcad6656e2020f99a048b91d9626",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -336,7 +336,7 @@
                               },
                       "T08":  {
                                   "file":  "T08.hwpx",
-                                  "sha256":  "bf5367098e510c7958f59593d7b80a54209b2e2b1827e76b9c2f30ebabdf9bd7",
+                                  "sha256":  "b6aad27ead3ebd004f4f226692377b57513e175e5922e3214d6ddf45c0227255",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",
@@ -366,7 +366,7 @@
                                                  {
                                                      "key":  "row6",
                                                      "label":  "규 격(M)",
-                                                     "standardText":  "○ 5 층 이하 : 가로 업소폭 80%이내 - 판류형 : 세로 0.8m내 - 입체형 : 세로 0.45m이내"
+                                                     "standardText":  "○ 5층 이하 : 가로 업소폭 80%이내\n- 판류형 : 세로 0.8m내\n- 입체형 : 세로 0.45m이내"
                                                  },
                                                  {
                                                      "key":  "row7",
@@ -392,7 +392,7 @@
                               },
                       "T09":  {
                                   "file":  "T09.hwpx",
-                                  "sha256":  "dedbbe02e72b6976bec7f296c146479d0d529154e8128c1e3390295406c6e3ab",
+                                  "sha256":  "b17ec17bb72938e1cef696e374d308b355f261b6726b260b28c64c4189a4a3dd",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",

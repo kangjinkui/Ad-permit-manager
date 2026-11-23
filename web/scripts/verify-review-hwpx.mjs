@@ -126,8 +126,14 @@ async function verify() {
         [1252152058 + 4 * caseIndex, 1252152059 + 4 * caseIndex]);
       assert.equal((xml.match(/<hp:secPr\b/g) ?? []).length, 1);
       assert.doesNotMatch(xml, /\{\{REVIEW:/);
-      for (const value of [">적합<", ">부적합<", ">확인필요<", ">해당없음<", "작성자 검증 작성자", "검증&amp;사진.png", "새 표시 &amp; &lt;한글&gt;", "첫 문장 &amp; &lt;검토&gt;<hp:lineBreak/>둘째 문장"]) {
+      for (const value of [">적합<", ">부적합<", ">확인필요<", ">해당없음<", "작성자 검증 작성자", "새 표시 &amp; &lt;한글&gt;", "첫 문장 &amp; &lt;검토&gt;<hp:lineBreak/>둘째 문장"]) {
         assert.ok(xml.includes(value), `${templateId} missing ${value}`);
+      }
+      if (category === "내용변경") {
+        assert.match(xml, /첨부\s*목록/);
+        assert.match(xml, /1\. 검증&amp;사진\.png/);
+      } else {
+        assert.doesNotMatch(xml, /첨부\s*목록|검증&amp;사진\.png/);
       }
       assert.doesNotMatch(xml, /검증 근거|업소 가로폭 99m/);
       if (templateId === "T01") assert.match(xml, /이전 표시/);
@@ -149,6 +155,11 @@ async function verify() {
 
       if (templateId === "T08") {
         assert.match(xml, /가로 업소폭 80%/);
+        const alignedBullet = /<hp:p\b[^>]*paraPrIDRef="57"[^>]*>.*<hp:run charPrIDRef="94"><hp:t> ○ /;
+        assert.match(tableCell(xml, 1, 1, 1), alignedBullet);
+        const generalSizeStandard = tableCell(xml, 1, 6, 1);
+        assert.match(generalSizeStandard, alignedBullet);
+        assert.equal((generalSizeStandard.match(/<hp:p\b/g) ?? []).length, 1);
         assert.match(tableCell(xml, 1, 10, 0), />안전점검</);
         assert.match(tableCell(xml, 1, 10, 1), /안전점검 결과와 검사일을 확인/);
         assert.match(tableCell(xml, 1, 10, 1), /charPrIDRef="94"><hp:t>○ 안전점검/);
@@ -186,6 +197,7 @@ async function verify() {
           assert.match(topXml, /벽면이용 상단간판 표시기간 연장/);
           const sizeStandard = tableCell(topXml, 1, 6, 1);
           assert.match(sizeStandard, expected);
+          assert.match(sizeStandard, alignedBullet);
           assert.doesNotMatch(sizeStandard, /가로 업소폭 80%/);
           assert.match(tableCell(topXml, 1, 3, 2), />옥상</);
           assert.match(tableCell(topXml, 0, 0, 1), />신고번호</);

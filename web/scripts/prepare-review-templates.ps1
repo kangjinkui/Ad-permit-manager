@@ -307,9 +307,6 @@ try {
   if ($sectionControlRuns.Count -eq 0) {
     throw "The source section controls are missing from the first paragraph."
   }
-  $attachmentLabelSource = $sourceParagraphs[13]
-  $attachmentValueSource = $sourceParagraphs[14]
-
   $outputPath = [System.IO.Path]::GetFullPath($OutputDirectory)
   [System.IO.Directory]::CreateDirectory($outputPath) | Out-Null
 
@@ -437,8 +434,21 @@ try {
       $standardText = Get-NormalizedText ((@($standardCell.SelectNodes(".//hp:t", $namespaces) | ForEach-Object { $_.InnerText })) -join " ")
       Set-NodeToken $valueCell $namespaces "${key}Value"
       Set-NodeToken $statusCell $namespaces "${key}Status"
+      if ($definition.id -eq "T08" -and $rowIndex -eq 1) {
+        $firstParagraph = $standardCell.SelectSingleNode("./hp:subList/hp:p[1]", $namespaces)
+        $bullet = $firstParagraph.SelectSingleNode("./hp:run/hp:t[normalize-space(.) = '○']", $namespaces)
+        $bullet.InnerText = " ○ "
+        $bullet.ParentNode.SetAttribute("charPrIDRef", "94")
+        $lineLayout = $firstParagraph.SelectSingleNode("./hp:linesegarray", $namespaces)
+        if ($null -ne $lineLayout) { $firstParagraph.RemoveChild($lineLayout) | Out-Null }
+      }
       if ($definition.id -eq "T08" -and $rowIndex -eq 6) {
-        Set-NodeToken $standardCell $namespaces "wallRenewalSizeStandard"
+        $standardText = (@($standardCell.SelectNodes("./hp:subList/hp:p", $namespaces) | ForEach-Object {
+          Get-NormalizedText $_.InnerText
+        }) -join "`n")
+        Set-NodeToken $standardCell $namespaces "wallRenewalSizeStandard" -CompactCell
+        $firstText = $standardCell.SelectSingleNode("./hp:subList/hp:p[1]/hp:run[1]/hp:t", $namespaces)
+        $firstText.InnerText = " " + $firstText.InnerText
       }
       if ($definition.id -eq "T08" -and $rowIndex -eq 10) {
         $standardRun = $standardCell.SelectSingleNode(".//hp:run[hp:t[normalize-space(.) != '']]", $namespaces)
@@ -464,7 +474,8 @@ try {
     Set-NodeToken (Get-NextTextParagraph $caseParagraphs $opinionLabelIndex $namespaces) $namespaces "reviewOpinion"
     Set-NodeToken $caseParagraphs[$reviewerIndex] $namespaces "reviewer"
 
-    if ($attachmentLabelIndex -ge 0) {
+    if ($definition.type -eq "change") {
+      if ($attachmentLabelIndex -lt 0) { throw "$($definition.id) is missing the attachment list." }
       $attachmentValue = Get-NextTextParagraph $caseParagraphs $attachmentLabelIndex $namespaces
       Set-NodeToken $attachmentValue $namespaces "attachments"
       $removeAttachments = $false
@@ -477,12 +488,6 @@ try {
           $document.DocumentElement.RemoveChild($paragraph) | Out-Null
         }
       }
-    } else {
-      $attachmentLabel = $document.ImportNode($attachmentLabelSource, $true)
-      $attachmentValue = $document.ImportNode($attachmentValueSource, $true)
-      $document.DocumentElement.AppendChild($attachmentLabel) | Out-Null
-      $document.DocumentElement.AppendChild($attachmentValue) | Out-Null
-      Set-NodeToken $attachmentValue $namespaces "attachments"
     }
 
     $sectionBytes = Convert-XmlDocumentToBytes $document
