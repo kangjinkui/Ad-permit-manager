@@ -336,7 +336,7 @@
                               },
                       "T08":  {
                                   "file":  "T08.hwpx",
-                                  "sha256":  "99e52e9100e705287aa549aa4ba4006b36dce5337f620c302cf12b2f247c5e63",
+                                  "sha256":  "bf5367098e510c7958f59593d7b80a54209b2e2b1827e76b9c2f30ebabdf9bd7",
                                   "checks":  [
                                                  {
                                                      "key":  "row1",

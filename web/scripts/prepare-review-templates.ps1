@@ -92,7 +92,8 @@ function Set-NodeToken {
   param(
     [System.Xml.XmlNode]$Node,
     [System.Xml.XmlNamespaceManager]$Namespaces,
-    [string]$Key
+    [string]$Key,
+    [switch]$CompactCell
   )
 
   $textNodes = @($Node.SelectNodes(".//hp:t", $Namespaces))
@@ -113,6 +114,15 @@ function Set-NodeToken {
       $paragraph.RemoveChild($lineLayout) | Out-Null
     }
   }
+
+  if ($CompactCell) {
+    foreach ($paragraph in @($Node.SelectNodes("./hp:subList/hp:p[position() > 1]", $Namespaces))) {
+      $inlineControls = $paragraph.SelectNodes(".//hp:run/*[not(self::hp:t)] | .//hp:t/*", $Namespaces)
+      if (-not $paragraph.InnerText.Trim() -and $inlineControls.Count -eq 0) {
+        $paragraph.ParentNode.RemoveChild($paragraph) | Out-Null
+      }
+    }
+  }
 }
 
 function Get-TopLevelParagraphText {
@@ -123,6 +133,20 @@ function Get-TopLevelParagraphText {
 
   $parts = @($Paragraph.SelectNodes(".//hp:t[not(ancestor::hp:tbl)]", $Namespaces) | ForEach-Object { $_.InnerText })
   return $parts -join ""
+}
+
+function Set-TableRowMinimumHeight {
+  param([System.Xml.XmlNode]$Table, [System.Xml.XmlNamespaceManager]$Namespaces, [int]$Row, [int]$Height)
+
+  $rowNode = $Table.SelectNodes("./hp:tr", $Namespaces).Item($Row)
+  $sizes = @($rowNode.SelectNodes("./hp:tc/hp:cellSz", $Namespaces))
+  $originalHeight = [int]$sizes[0].GetAttribute("height")
+  if ($originalHeight -ge $Height) { return }
+  foreach ($size in $sizes) {
+    $size.SetAttribute("height", [string]$Height)
+  }
+  $tableSize = $Table.SelectSingleNode("./hp:sz", $Namespaces)
+  $tableSize.SetAttribute("height", [string]([int]$tableSize.GetAttribute("height") + $Height - $originalHeight))
 }
 
 function Get-NextTextParagraph {
@@ -366,9 +390,28 @@ try {
       }
     }
 
+    if ($definition.id -eq "T08") { $topTokens.Remove("2,3") }
     foreach ($mapping in $topTokens.GetEnumerator()) {
       $coordinate = $mapping.Key.Split(",")
-      Set-NodeToken (Get-Cell $topTable $namespaces ([int]$coordinate[0]) ([int]$coordinate[1])) $namespaces $mapping.Value
+      Set-NodeToken (Get-Cell $topTable $namespaces ([int]$coordinate[0]) ([int]$coordinate[1])) $namespaces $mapping.Value -CompactCell:($definition.id -eq "T08")
+    }
+
+    if ($definition.id -eq "T08") {
+      $kindHeading = (Get-Cell $topTable $namespaces 0 0).SelectSingleNode("./hp:subList/hp:p", $namespaces)
+      $numberHeading = (Get-Cell $topTable $namespaces 0 1).SelectSingleNode("./hp:subList/hp:p", $namespaces)
+      $numberHeading.SetAttribute("paraPrIDRef", $kindHeading.GetAttribute("paraPrIDRef"))
+      $numberHeading.SelectSingleNode("./hp:run", $namespaces).SetAttribute(
+        "charPrIDRef", $kindHeading.SelectSingleNode("./hp:run", $namespaces).GetAttribute("charPrIDRef"))
+      Set-NodeToken (Get-Cell $topTable $namespaces 0 3) $namespaces "wallApplicantHeading"
+      $applicantParagraphs = (Get-Cell $topTable $namespaces 2 3).SelectNodes("./hp:subList/hp:p", $namespaces)
+      Set-NodeToken ($applicantParagraphs.Item(0)) $namespaces "wallApplicantName"
+      Set-NodeToken ($applicantParagraphs.Item(1)) $namespaces "displayText"
+      Set-NodeToken (Get-Cell $reviewTable $namespaces 1 0) $namespaces "wallRegionHeading"
+      Set-NodeToken (Get-Cell $reviewTable $namespaces 10 0) $namespaces "wallSafetyHeading"
+      Set-TableRowMinimumHeight $topTable $namespaces 2 4800
+      Set-TableRowMinimumHeight $reviewTable $namespaces 1 5000
+      Set-TableRowMinimumHeight $reviewTable $namespaces 6 6200
+      Set-TableRowMinimumHeight $reviewTable $namespaces 10 3300
     }
 
     $reviewRows = @($reviewTable.SelectNodes("./hp:tr", $namespaces))
@@ -385,6 +428,12 @@ try {
       $valueCell = Get-Cell $reviewTable $namespaces $rowIndex 2
       $statusCell = Get-Cell $reviewTable $namespaces $rowIndex 3
       $label = Get-NormalizedText ((@($labelCell.SelectNodes(".//hp:t", $namespaces) | ForEach-Object { $_.InnerText })) -join " ")
+      if ($definition.id -eq "T08" -and $rowIndex -eq 1) {
+        $label = "「국토의 계획 및 이용에 관한 법률」에 따른 지역"
+      }
+      if ($definition.id -eq "T08" -and $rowIndex -eq 10) {
+        $label = "안전점검"
+      }
       $standardText = Get-NormalizedText ((@($standardCell.SelectNodes(".//hp:t", $namespaces) | ForEach-Object { $_.InnerText })) -join " ")
       Set-NodeToken $valueCell $namespaces "${key}Value"
       Set-NodeToken $statusCell $namespaces "${key}Status"
@@ -392,7 +441,8 @@ try {
         Set-NodeToken $standardCell $namespaces "wallRenewalSizeStandard"
       }
       if ($definition.id -eq "T08" -and $rowIndex -eq 10) {
-        Set-NodeToken $standardCell $namespaces "safetyStandard"
+        $standardRun = $standardCell.SelectSingleNode(".//hp:run[hp:t[normalize-space(.) != '']]", $namespaces)
+        Set-NodeToken $standardRun $namespaces "safetyStandard"
         $standardText = "○ 안전점검 결과와 검사일을 확인"
       }
       $checks += [ordered]@{ key = $key; label = $label; standardText = $standardText }

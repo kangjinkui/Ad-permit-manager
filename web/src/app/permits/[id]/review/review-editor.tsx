@@ -7,6 +7,7 @@ import {
   getReviewChecks,
   getReviewFieldKeys,
   getSuggestedCheckValue,
+  getUpperWallSizeBand,
   reviewFields,
   reviewStatuses,
   selectReviewTemplate,
@@ -256,13 +257,21 @@ export function ReviewEditor({
       getReviewFieldKeys(templateId).filter(
         (fieldKey) =>
           fieldKey !== "wallPlacement" &&
-          (!isWallNew ||
+          (!hasWallPlacementChoice ||
             (fieldKey !== "buildingFloors" && fieldKey !== "orientation")),
       ),
-    [isWallNew, templateId],
+    [hasWallPlacementChoice, templateId],
   );
   const wallPlacement = draft.fields.wallPlacement || (isWallRenewal ? "일반" : "");
   const isWallTop = hasWallPlacementChoice && wallPlacement === "상단";
+  const upperWallSizeBand = isWallTop
+    ? getUpperWallSizeBand(draft.fields.buildingFloors)
+    : null;
+  const hasUpperWallCriteria =
+    !isWallRenewal ||
+    !isWallTop ||
+    (upperWallSizeBand !== null &&
+      (draft.fields.orientation === "가로형" || draft.fields.orientation === "세로형"));
   const displayedTemplateId = templateId ?? (dirty ? null : initialTemplateId);
 
   function updateField(fieldKey: ReviewFieldKey, value: string) {
@@ -285,7 +294,21 @@ export function ReviewEditor({
         currentSelection.templateId !== nextSelection.templateId;
 
       if (templateChanged) return { fields, checks: {} };
-      if (isWallRenewal && fieldKey === "wallPlacement" && (current.fields.wallPlacement || "일반") !== value) {
+      const wallPlacementChanged =
+        fieldKey === "wallPlacement" &&
+        (current.fields.wallPlacement || "일반") !== value;
+      const upperWallBandChanged =
+        fieldKey === "buildingFloors" &&
+        getUpperWallSizeBand(current.fields.buildingFloors) !==
+          getUpperWallSizeBand(value);
+      const upperWallDirectionChanged =
+        fieldKey === "orientation" && current.fields.orientation !== value;
+      if (
+        isWallRenewal &&
+        (wallPlacementChanged ||
+          ((current.fields.wallPlacement || "일반") === "상단" &&
+            (upperWallBandChanged || upperWallDirectionChanged)))
+      ) {
         const checks = { ...current.checks };
         delete checks.row6;
         return { fields, checks };
@@ -523,7 +546,7 @@ export function ReviewEditor({
                   onChange={(value) => updateField("wallPlacement", value || (isWallRenewal ? "일반" : ""))}
                 />
               </label>
-              {isWallTop && isWallNew ? (
+              {isWallTop ? (
                 <>
                   <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                     {reviewFields.buildingFloors.label}
@@ -533,6 +556,15 @@ export function ReviewEditor({
                       disabled={busy}
                       onChange={(value) => updateField("buildingFloors" as ReviewFieldKey, value)}
                     />
+                    {upperWallSizeBand ? (
+                      <span className="text-xs font-normal text-sky-700">
+                        {upperWallSizeBand} 상단간판 규격 기준 적용
+                      </span>
+                    ) : (
+                      <span className="text-xs font-normal text-amber-700">
+                        건물 전체 층수를 입력하면 적용할 규격 기준이 결정됩니다.
+                      </span>
+                    )}
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                     {reviewFields.orientation.label}
@@ -546,6 +578,11 @@ export function ReviewEditor({
                 </>
               ) : null}
             </div>
+            {isWallRenewal && isWallTop && !hasUpperWallCriteria ? (
+              <p className="mt-4 text-sm font-medium text-amber-800">
+                HWPX를 생성하려면 건물 전체 층수와 표시 방향을 입력하세요.
+              </p>
+            ) : null}
           </section>
         ) : null}
 
@@ -727,7 +764,7 @@ export function ReviewEditor({
           <button
             type="button"
             className="button-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={busy || !templateId}
+            disabled={busy || !templateId || !hasUpperWallCriteria}
             onClick={handleGenerate}
           >
             {generating ? "문서 생성 중…" : "HWPX 다운로드"}

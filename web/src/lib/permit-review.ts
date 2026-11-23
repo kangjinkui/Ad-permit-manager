@@ -82,11 +82,41 @@ export function getReviewFieldKeys(templateId: ReviewTemplateId | null): ReviewF
   return [...commonFields, ...(templateId ? additionalFields[templateId] : []), "reviewOpinion", "reviewer"];
 }
 
+export function getUpperWallSizeBand(floors: string | undefined): "10층 이하" | "11층 이상" | null {
+  const count = Number(floors);
+  if (!Number.isSafeInteger(count) || count < 1) return null;
+  return count <= 10 ? "10층 이하" : "11층 이상";
+}
+
+function getUpperWallSizeStandard({ buildingFloors, orientation }: ReviewValues): string {
+  const band = getUpperWallSizeBand(buildingFloors);
+  if (!band || (orientation !== "가로형" && orientation !== "세로형")) {
+    return "○ 건물 전체 층수와 표시 방향을 입력하면 상단간판 규격 기준이 표시됩니다.";
+  }
+
+  const floors = Number(buildingFloors);
+  if (floors < 4) return "○ 상단간판 표시 기준은 4층 이상 건물에 적용됩니다. 기존 허가 조건을 확인하세요.";
+
+  // 강남구 옥외광고물 설치 가이드 2026, 6–7쪽 벽면이용간판(상단간판).
+  const smallSignLimit = `${(floors + 2) / 10}m`;
+  const horizontal = orientation === "가로형";
+  const isHighRise = band === "11층 이상";
+  const width = horizontal ? "건물 가로폭의 1/2 이내" : `최대 ${isHighRise ? "2m" : smallSignLimit}`;
+  const height = horizontal
+    ? `최대 ${isHighRise ? "3m" : smallSignLimit}`
+    : "건물 높이의 1/2 이내, 최대 10m";
+  return [
+    `○ ${band} 상단간판 (${orientation})`,
+    `가로 ${width} / 세로 ${height}`,
+    ...(horizontal ? [] : ["상단은 최상층에서 시작, 하단은 4층 이상"]),
+  ].join("\n");
+}
+
 export function getReviewChecks(templateId: ReviewTemplateId, fields?: ReviewValues) {
   const checks = manifest.templates[templateId].checks;
   if (templateId !== "T08" || fields?.wallPlacement !== "상단") return checks;
   return checks.map((check) => check.key === "row6"
-    ? { ...check, standardText: "○ 설치 위치와 표시 방향에 해당하는 상단간판 규격 기준 확인" }
+    ? { ...check, standardText: getUpperWallSizeStandard(fields) }
     : check);
 }
 
@@ -257,6 +287,9 @@ export function getReviewDownloadError(templateId: ReviewTemplateId, fields: Rev
     required.push(...numberFields, "periodAfterFrom", "periodAfterTo");
     if (fields.safetyResult === "합격" || fields.safetyResult === "불합격") required.push("safetyDate");
   }
+  if (templateId === "T08" && fields.wallPlacement === "상단") {
+    required.push("buildingFloors", "orientation");
+  }
   const missing = required.filter((key) => !fields[key]);
   if (missing.length) return `검토서 출력에 필요한 항목을 입력하세요. (${missing.map((key) => reviewFields[key].label).join(", ")})`;
   if (fields.specification?.split(/\r?\n/).some((value) => value.trim() === "미입력")) {
@@ -276,7 +309,8 @@ export function getSuggestedCheckValue(templateId: ReviewTemplateId, key: string
   const floor = fields.floor && /^\d+$/.test(fields.floor) ? `${fields.floor}층` : fields.floor;
   const protrusion = metric("돌출폭", fields.protrusionM);
   const lighting = fields.lighting;
-  const safety = join(fields.safetyResult, fields.safetyDate);
+  const safetyDate = templateId === "T08" ? fields.safetyDate?.replaceAll("-", ".") : fields.safetyDate;
+  const safety = join(fields.safetyResult, safetyDate);
   let values: (string | undefined)[];
 
   switch (templateId) {

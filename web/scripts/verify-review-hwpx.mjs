@@ -45,6 +45,16 @@ function structuralTags(xml) {
   return xml.match(/<\/?hp:(?:tbl|tr|tc|cellAddr|cellSpan|cellSz|p|run|secPr)\b[^>]*>/g);
 }
 
+function tableCell(xml, tableIndex, row, column) {
+  const table = (xml.match(/<hp:tbl\b[\s\S]*?<\/hp:tbl>/g) ?? [])[tableIndex];
+  const cell = (table?.match(/<hp:tc\b[\s\S]*?<\/hp:tc>/g) ?? []).find((value) => {
+    const address = value.match(/<hp:cellAddr\b[^>]*>/)?.[0];
+    return address?.includes(`rowAddr="${row}"`) && address.includes(`colAddr="${column}"`);
+  });
+  assert.ok(cell, `Missing cell ${tableIndex}/${row}/${column}`);
+  return cell;
+}
+
 async function verify() {
   const cacheDirectory = path.join(webDirectory, "node_modules", ".cache");
   await fs.mkdir(cacheDirectory, { recursive: true });
@@ -54,7 +64,7 @@ async function verify() {
       "--noCheck", "--module", "commonjs", "--target", "es2022", "--resolveJsonModule", "--esModuleInterop",
       "--rootDir", ".", "--outDir", temporary, "src/lib/permit-review-hwpx.ts",
     ], { cwd: webDirectory, stdio: "inherit" });
-    const { calculateRenewalPeriods, getReviewDownloadError, getReviewFieldKeys, getSuggestedCheckValue, normalizeReviewDraft, selectReviewTemplate } =
+    const { calculateRenewalPeriods, getReviewDownloadError, getReviewFieldKeys, getSuggestedCheckValue, getUpperWallSizeBand, normalizeReviewDraft, selectReviewTemplate } =
       (await import(pathToFileURL(path.join(temporary, "src/lib/permit-review.js")))).default;
     const { generatePermitReviewHwpx } =
       (await import(pathToFileURL(path.join(temporary, "src/lib/permit-review-hwpx.js")))).default;
@@ -79,6 +89,10 @@ async function verify() {
     assert.equal(getSuggestedCheckValue("T08", "row3", { floor: "지상 7층" }), "지상 7층");
     assert.equal(getSuggestedCheckValue("T08", "row3", { floor: "옥상", wallPlacement: "상단" }), "옥상");
     assert.ok(!Object.keys(fixtures).some((templateId) => getReviewFieldKeys(templateId).includes("businessWidthM")));
+    assert.equal(getUpperWallSizeBand("10"), "10층 이하");
+    assert.equal(getUpperWallSizeBand("11"), "11층 이상");
+    assert.equal(getUpperWallSizeBand("10.5"), null);
+    assert.equal(getUpperWallSizeBand(undefined), null);
 
     for (const [caseIndex, [templateId, [kind, category, selectorFields]]] of Object.entries(fixtures).entries()) {
       const checks = {
@@ -127,7 +141,7 @@ async function verify() {
           assert.equal(faceXml.includes("5.6 × 7.8"), faceCount === 2);
         }
       }
-      if (templateId === "T08" || templateId === "T09") {
+      if (templateId === "T09") {
         assert.match(xml, /2030\.01\.01 ~ 2031\.12\.31/);
         assert.match(xml, /2032\.01\.01 ~ 2033\.12\.31/);
         assert.match(xml, /2032-01-31/);
@@ -135,21 +149,53 @@ async function verify() {
 
       if (templateId === "T08") {
         assert.match(xml, /가로 업소폭 80%/);
+        assert.match(tableCell(xml, 1, 10, 0), />안전점검</);
+        assert.match(tableCell(xml, 1, 10, 1), /안전점검 결과와 검사일을 확인/);
+        assert.match(tableCell(xml, 1, 10, 1), /charPrIDRef="94"><hp:t>○ 안전점검/);
+        assert.doesNotMatch(tableCell(xml, 1, 10, 1), /2032[.-]01[.-]31/);
+        assert.match(tableCell(xml, 1, 10, 2), /불합격<hp:lineBreak\/>2032\.01\.31/);
+        assert.match(tableCell(xml, 1, 10, 3), />확인필요</);
+        assert.match(tableCell(xml, 1, 1, 0), /「국토의 계획 및<hp:lineBreak\/>이용에 관한 법률」에<hp:lineBreak\/>따른 지역/);
+        assert.match(tableCell(xml, 0, 0, 3), />상호명 \/ 표시내용</);
+        assert.match(tableCell(xml, 0, 0, 6), /<hp:cellSpan\b[^>]*colSpan="2"/);
+        assert.match(tableCell(xml, 0, 2, 3), /검증 업체\/<\/hp:t>.*<\/hp:p><hp:p\b.*새 표시/);
+        assert.match(tableCell(xml, 0, 2, 6), /<hp:cellSz\b[^>]*height="4800"/);
+        assert.match(tableCell(xml, 1, 10, 2), /<hp:cellSz\b[^>]*height="3300"/);
         const { periodBeforeTo, periodAfterFrom, periodAfterTo, ...baseFields } = normalized.draft.fields;
         assert.ok(periodBeforeTo && periodAfterFrom && periodAfterTo);
-        const top = normalizeReviewDraft({
-          fields: { ...baseFields, wallPlacement: "상단", floor: "옥상", periodBeforeFrom: "2023-11-17" },
-          checks: {},
-        }, kind, category);
-        assert.equal(top.templateId, templateId);
-        const topPackage = await JSZip.loadAsync(await generatePermitReviewHwpx(top.templateId, top.draft, []));
-        const topXml = await topPackage.file(sectionFile).async("string");
-        assert.match(topXml, /벽면이용 상단간판 표시기간 연장/);
-        assert.match(topXml, /상단간판 규격 기준 확인/);
-        assert.doesNotMatch(topXml, /가로 업소폭 80%/);
-        assert.match(topXml, />옥상</);
-        assert.match(topXml, /2023\.11\.17 ~ 2026\.11\.16/);
-        assert.match(topXml, /2026\.11\.17 ~ 2029\.11\.16/);
+        assert.match(getReviewDownloadError("T08", { ...normalized.draft.fields, wallPlacement: "상단" }), /건물 전체 층수, 표시 방향/);
+        const topRules = [
+          ["4", "가로형", /10층 이하.*세로 최대 0\.6m/],
+          ["10", "가로형", /10층 이하.*건물 가로폭의 1\/2 이내 \/ 세로 최대 1\.2m/],
+          ["10", "세로형", /10층 이하.*가로 최대 1\.2m \/ 세로 건물 높이의 1\/2 이내, 최대 10m/],
+          ["11", "가로형", /11층 이상.*건물 가로폭의 1\/2 이내 \/ 세로 최대 3m/],
+          ["11", "세로형", /11층 이상.*가로 최대 2m \/ 세로 건물 높이의 1\/2 이내, 최대 10m/],
+        ];
+        for (const [buildingFloors, orientation, expected] of topRules) {
+          const top = normalizeReviewDraft({
+            fields: {
+              ...baseFields, wallPlacement: "상단", floor: "옥상", periodBeforeFrom: "2023-11-17",
+              permitNumberLabel: "신고번호", permitOrReportNo: "2031-1234567-09-2-00130", buildingFloors, orientation,
+            },
+            checks: {},
+          }, kind, category);
+          assert.equal(top.templateId, templateId);
+          assert.equal(getReviewDownloadError(top.templateId, top.draft.fields), null);
+          const topPackage = await JSZip.loadAsync(await generatePermitReviewHwpx(top.templateId, top.draft, []));
+          const topXml = await topPackage.file(sectionFile).async("string");
+          assert.match(topXml, /벽면이용 상단간판 표시기간 연장/);
+          const sizeStandard = tableCell(topXml, 1, 6, 1);
+          assert.match(sizeStandard, expected);
+          assert.doesNotMatch(sizeStandard, /가로 업소폭 80%/);
+          assert.match(tableCell(topXml, 1, 3, 2), />옥상</);
+          assert.match(tableCell(topXml, 0, 0, 1), />신고번호</);
+          assert.match(tableCell(topXml, 0, 2, 1), /2031-1234567-09-2-<hp:lineBreak\/>00130/);
+          assert.match(tableCell(topXml, 0, 2, 6), /2023\.11\.17\. ~<hp:lineBreak\/>2026\.11\.16\./);
+          assert.match(tableCell(topXml, 0, 2, 7), /2026\.11\.17\.<hp:lineBreak\/>~<hp:lineBreak\/>2029\.11\.16\./);
+          for (const column of [0, 1, 6, 7]) {
+            assert.equal((tableCell(topXml, 0, 2, column).match(/<hp:p\b/g) ?? []).length, 1);
+          }
+        }
       }
       console.log(`${templateId} structure and values OK`);
     }

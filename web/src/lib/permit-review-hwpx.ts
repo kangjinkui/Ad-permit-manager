@@ -26,8 +26,8 @@ function documentSignType(templateId: ReviewTemplateId, { wallPlacement, orienta
     case "T06": return "입간판";
     case "T07": return "벽면이용간판";
     case "T08": {
-      const kind = wallPlacement === "상단" ? "벽면이용 상단간판" : "벽면이용간판";
-      return orientation ? `${kind} (${orientation})` : kind;
+      const detail = wallPlacement === "상단" ? ["상단", orientation].filter(Boolean).join(" · ") : orientation;
+      return detail ? `벽면이용간판\n(${detail})` : "벽면이용간판";
     }
   }
 }
@@ -41,17 +41,30 @@ function period(start: string | undefined, end: string | undefined): string {
   return start && end ? `${start} ~ ${end}` : "";
 }
 
+function renewalPeriod(start: string | undefined, end: string | undefined, wallLayout?: "before" | "after"): string {
+  if (!start || !end) return "";
+  const first = start.replaceAll("-", ".");
+  const last = end.replaceAll("-", ".");
+  if (wallLayout === "before") return `${first}. ~\n${last}.`;
+  if (wallLayout === "after") return `${first}.\n~\n${last}.`;
+  return `${first} ~ ${last}`;
+}
+
 function buildReplacements(templateId: ReviewTemplateId, draft: ReviewDraft, attachments: readonly string[]) {
   const { fields, checks } = draft;
   const specification = fields.specification ?? "";
   const [firstSpecification, otherSpecifications] = splitLines(specification);
-  const periodBefore = period(fields.periodBeforeFrom, fields.periodBeforeTo);
-  const safetyInspection = [fields.safetyResult, fields.safetyDate].filter(Boolean).join(" · ");
+  const wallRenewal = templateId === "T08";
+  const permitNumber = fields.permitOrReportNo ?? "";
   const replacements: Record<string, string> = {
     signType: documentSignType(templateId, fields),
     wallRenewalTitle: fields.wallPlacement === "상단"
       ? "검   토   서(벽면이용 상단간판 표시기간 연장)"
       : "검   토   서(벽면이용간판)",
+    wallApplicantHeading: "상호명 / 표시내용",
+    wallApplicantName: fields.applicant ? `${fields.applicant}/` : "",
+    wallRegionHeading: "「국토의 계획 및\n이용에 관한 법률」에\n따른 지역",
+    wallSafetyHeading: "안전점검",
     applicant: fields.applicant ?? "",
     installationAddress: fields.installationAddress ?? "",
     displayText: fields.displayText ?? "",
@@ -60,22 +73,22 @@ function buildReplacements(templateId: ReviewTemplateId, draft: ReviewDraft, att
     quantity: fields.quantity ? `${fields.quantity}개` : "",
     lighting: fields.lighting ?? "",
     permitNumberLabel: fields.permitNumberLabel ?? "",
-    permitOrReportNo: fields.permitOrReportNo ?? "",
+    permitOrReportNo: wallRenewal ? permitNumber.replace(/^(\d{4}-\d{7}(?:-\d+)+-)\s*(\d+)$/, "$1\n$2") : permitNumber,
     previousDisplayText: fields.previousDisplayText ?? "",
-    currentPeriod: periodBefore,
+    currentPeriod: period(fields.periodBeforeFrom, fields.periodBeforeTo),
     applicantDisplayText: [fields.applicant, fields.displayText].filter(Boolean).join(" / "),
-    periodBefore: periodBefore.replaceAll("-", "."),
-    periodAfter: period(fields.periodAfterFrom, fields.periodAfterTo).replaceAll("-", "."),
+    periodBefore: renewalPeriod(fields.periodBeforeFrom, fields.periodBeforeTo, wallRenewal ? "before" : undefined),
+    periodAfter: renewalPeriod(fields.periodAfterFrom, fields.periodAfterTo, wallRenewal ? "after" : undefined),
     reviewOpinion: fields.reviewOpinion ?? "",
     reviewer: fields.reviewer ? `작성자 ${fields.reviewer}` : "작성자",
     attachments: attachments.length ? attachments.map((name, index) => `${index + 1}. ${name}`).join("\n") : "없음",
-    safetyStandard: `○ 안전점검 ${safetyInspection || "확인필요"}`,
   };
 
   for (const { key, standardText } of getReviewChecks(templateId, fields)) {
     const check = checks[key];
     const appliedValue = check?.appliedValue || getSuggestedCheckValue(templateId, key, fields);
-    if (templateId === "T08" && key === "row6") replacements.wallRenewalSizeStandard = standardText;
+    if (wallRenewal && key === "row6") replacements.wallRenewalSizeStandard = standardText;
+    if (wallRenewal && key === "row10") replacements.safetyStandard = standardText;
     if (templateId === "T07" && key === "row6") {
       const [firstValue, otherValues] = check?.appliedValue
         ? splitLines(check.appliedValue)
