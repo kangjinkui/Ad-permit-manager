@@ -305,6 +305,9 @@ try {
       }
     }
     $titleParagraph.SetAttribute("pageBreak", "0")
+    if ($definition.id -eq "T08") {
+      Set-NodeToken $titleParagraph $namespaces "wallRenewalTitle"
+    }
 
     for ($paragraphIndex = $paragraphs.Count - 1; $paragraphIndex -ge 0; $paragraphIndex--) {
       if ($paragraphIndex -lt $definition.start -or $paragraphIndex -gt $definition.end) {
@@ -385,6 +388,9 @@ try {
       $standardText = Get-NormalizedText ((@($standardCell.SelectNodes(".//hp:t", $namespaces) | ForEach-Object { $_.InnerText })) -join " ")
       Set-NodeToken $valueCell $namespaces "${key}Value"
       Set-NodeToken $statusCell $namespaces "${key}Status"
+      if ($definition.id -eq "T08" -and $rowIndex -eq 6) {
+        Set-NodeToken $standardCell $namespaces "wallRenewalSizeStandard"
+      }
       if ($definition.id -eq "T08" -and $rowIndex -eq 10) {
         Set-NodeToken $standardCell $namespaces "safetyStandard"
         $standardText = "○ 안전점검 결과와 검사일을 확인"

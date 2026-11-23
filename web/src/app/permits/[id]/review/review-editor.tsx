@@ -2,6 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import {
+  calculateRenewalPeriods,
+  completeRenewalPeriods,
   getReviewChecks,
   getReviewFieldKeys,
   getSuggestedCheckValue,
@@ -49,7 +51,7 @@ type CheckDefinition = {
 };
 
 function emptyCheck(): ReviewDraft["checks"][string] {
-  return { appliedValue: "", status: "확인필요", evidence: "" };
+  return { appliedValue: "", status: "확인필요" };
 }
 
 function sanitizeInitialDraft(
@@ -58,20 +60,27 @@ function sanitizeInitialDraft(
   permitKind: string,
   permitCategory: string,
 ): { draft: ReviewDraft; changed: boolean } {
+  let fields =
+    permitKind === "벽면이용간판" &&
+    permitCategory === "연장" &&
+    !draft.fields.wallPlacement
+      ? { ...draft.fields, wallPlacement: "일반" as const }
+      : draft.fields;
+  if (permitCategory === "연장") fields = completeRenewalPeriods(fields);
   const selectedTemplateId = selectReviewTemplate(
     permitKind,
     permitCategory,
-    draft.fields,
+    fields,
   ).templateId;
   if (!selectedTemplateId || selectedTemplateId !== savedTemplateId) {
     return {
-      draft: { ...draft, checks: {} },
-      changed: Object.keys(draft.checks).length > 0,
+      draft: { ...draft, fields, checks: {} },
+      changed: fields !== draft.fields || Object.keys(draft.checks).length > 0,
     };
   }
 
   const allowedKeys = new Set(
-    getReviewChecks(selectedTemplateId).map((check) => check.key),
+    getReviewChecks(selectedTemplateId, fields).map((check) => check.key),
   );
   const checks: ReviewDraft["checks"] = {};
   let changed = false;
@@ -79,16 +88,22 @@ function sanitizeInitialDraft(
     if (
       !allowedKeys.has(key) ||
       typeof check?.appliedValue !== "string" ||
-      typeof check?.evidence !== "string" ||
       !(reviewStatuses as readonly string[]).includes(check?.status)
     ) {
       changed = true;
       continue;
     }
-    checks[key] = check;
+    checks[key] = {
+      appliedValue: check.appliedValue,
+      status: check.status,
+    };
+    if ("evidence" in check) changed = true;
   }
 
-  return { draft: changed ? { ...draft, checks } : draft, changed };
+  return {
+    draft: changed || fields !== draft.fields ? { ...draft, fields, checks } : draft,
+    changed: changed || fields !== draft.fields,
+  };
 }
 
 async function readApiError(response: Response): Promise<string> {
@@ -184,6 +199,7 @@ function FieldControl({
       step={definition.type === "number" ? "any" : undefined}
       value={value}
       disabled={disabled}
+      placeholder={fieldKey === "floor" ? "예: 3층, 옥상" : undefined}
       onChange={(event) => onChange(event.target.value)}
     />
   );
@@ -229,10 +245,12 @@ export function ReviewEditor({
   );
   const templateId = selection.templateId;
   const checks: CheckDefinition[] = useMemo(
-    () => (templateId ? getReviewChecks(templateId) : []),
-    [templateId],
+    () => (templateId ? getReviewChecks(templateId, draft.fields) : []),
+    [draft.fields, templateId],
   );
   const isWallNew = permitKind === "벽면이용간판" && permitCategory === "신규";
+  const isWallRenewal = permitKind === "벽면이용간판" && permitCategory === "연장";
+  const hasWallPlacementChoice = isWallNew || isWallRenewal;
   const fieldKeys = useMemo(
     () =>
       getReviewFieldKeys(templateId).filter(
@@ -243,8 +261,8 @@ export function ReviewEditor({
       ),
     [isWallNew, templateId],
   );
-  const wallPlacement = draft.fields.wallPlacement ?? "";
-  const isWallTop = isWallNew && wallPlacement === "상단";
+  const wallPlacement = draft.fields.wallPlacement || (isWallRenewal ? "일반" : "");
+  const isWallTop = hasWallPlacementChoice && wallPlacement === "상단";
   const displayedTemplateId = templateId ?? (dirty ? null : initialTemplateId);
 
   function updateField(fieldKey: ReviewFieldKey, value: string) {
@@ -255,6 +273,9 @@ export function ReviewEditor({
         current.fields,
       );
       const fields = { ...current.fields, [fieldKey]: value };
+      if (permitCategory === "연장" && fieldKey === "periodBeforeFrom") {
+        Object.assign(fields, calculateRenewalPeriods(value));
+      }
       const nextSelection = selectReviewTemplate(
         permitKind,
         permitCategory,
@@ -263,10 +284,13 @@ export function ReviewEditor({
       const templateChanged =
         currentSelection.templateId !== nextSelection.templateId;
 
-      return {
-        fields,
-        checks: templateChanged ? {} : current.checks,
-      };
+      if (templateChanged) return { fields, checks: {} };
+      if (isWallRenewal && fieldKey === "wallPlacement" && (current.fields.wallPlacement || "일반") !== value) {
+        const checks = { ...current.checks };
+        delete checks.row6;
+        return { fields, checks };
+      }
+      return { fields, checks: current.checks };
     });
     setDirty(true);
     setNotice(null);
@@ -274,7 +298,7 @@ export function ReviewEditor({
 
   function updateCheck(
     key: string,
-    property: "appliedValue" | "status" | "evidence",
+    property: "appliedValue" | "status",
     value: string,
   ) {
     setDraft((current) => {
@@ -469,7 +493,9 @@ export function ReviewEditor({
           </div>
           <div className="flex flex-col items-end gap-1">
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
-              {templateId ? `${templateId} 서식` : "서식 선택 필요"}
+              {templateId
+                ? `${templateId} 서식${isWallRenewal ? ` · ${wallPlacement}간판` : ""}`
+                : "서식 선택 필요"}
             </span>
             {dirty ? (
               <span className="text-xs font-medium text-amber-600">저장되지 않은 변경</span>
@@ -479,11 +505,13 @@ export function ReviewEditor({
           </div>
         </div>
 
-        {isWallNew ? (
+        {hasWallPlacementChoice ? (
           <section className="mt-8 rounded-[24px] border border-sky-200 bg-sky-50/70 p-5">
             <h2 className="text-lg font-semibold text-slate-900">벽면 간판 분류</h2>
             <p className="mt-1 text-sm text-slate-600">
-              설치 위치와 건물 층수, 방향에 따라 검토서 서식이 결정됩니다.
+              {isWallRenewal
+                ? "일반간판과 상단간판 중 실제 설치 형태를 선택하세요. 선택한 형태가 검토서와 규격 기준에 반영됩니다."
+                : "설치 위치와 건물 층수, 방향에 따라 검토서 서식이 결정됩니다."}
             </p>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
@@ -492,10 +520,10 @@ export function ReviewEditor({
                   fieldKey={"wallPlacement" as ReviewFieldKey}
                   value={wallPlacement}
                   disabled={busy}
-                  onChange={(value) => updateField("wallPlacement" as ReviewFieldKey, value)}
+                  onChange={(value) => updateField("wallPlacement", value || (isWallRenewal ? "일반" : ""))}
                 />
               </label>
-              {isWallTop ? (
+              {isWallTop && isWallNew ? (
                 <>
                   <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                     {reviewFields.buildingFloors.label}
@@ -529,7 +557,7 @@ export function ReviewEditor({
 
         {templateId === "T02" ? (
           <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-            T02 원본의 규격 허가기준 문구는 가로형 기준으로 기재되어 있습니다. 실제 적용 기준을 확인한 뒤 판정과 근거를 입력하세요.
+            T02 원본의 규격 허가기준 문구는 가로형 기준으로 기재되어 있습니다. 실제 적용 기준을 확인한 뒤 신청내용과 판정을 입력하세요.
           </p>
         ) : null}
 
@@ -551,6 +579,11 @@ export function ReviewEditor({
                   disabled={busy}
                   onChange={(value) => updateField(fieldKey, value)}
                 />
+                {permitCategory === "연장" && fieldKey === "periodBeforeFrom" ? (
+                  <span className="text-xs font-normal text-slate-400">
+                    시작일을 입력하면 기존 종료일과 3년 연장 기간이 자동으로 입력됩니다.
+                  </span>
+                ) : null}
               </label>
             ))}
           </div>
@@ -562,7 +595,7 @@ export function ReviewEditor({
             점검 항목
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            허가기준을 확인하고 신청내용, 판정, 근거를 직접 기록하세요. 기본 판정은 확인필요입니다.
+            허가기준을 확인하고 신청내용과 판정을 기록하세요. 기본 판정은 확인필요입니다.
           </p>
           <div className="mt-6 space-y-4">
             {checks.map((check, index) => {
@@ -588,7 +621,7 @@ export function ReviewEditor({
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_minmax(0,1fr)]">
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px]">
                     <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                       신청내용{suggestedValue ? " (비워두면 자동 입력)" : ""}
                       <textarea
@@ -617,17 +650,6 @@ export function ReviewEditor({
                           </option>
                         ))}
                       </select>
-                    </label>
-                    <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-                      근거 또는 확인사항
-                      <textarea
-                        className="field min-h-24 resize-y"
-                        value={value.evidence}
-                        disabled={busy}
-                        onChange={(event) =>
-                          updateCheck(check.key, "evidence", event.target.value)
-                        }
-                      />
                     </label>
                   </div>
                 </section>

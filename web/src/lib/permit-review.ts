@@ -22,7 +22,7 @@ export const reviewFields = {
   lighting: { label: "조명" },
   landUseZone: { label: "용도지역" },
   adOwner: { label: "광고 유형", type: "select", options: ["자사광고", "타사광고"] },
-  floor: { label: "설치층", type: "number" },
+  floor: { label: "설치층" },
   buildingFloors: { label: "건물 전체 층수", type: "number" },
   wallPlacement: { label: "벽면 설치 구분", type: "select", options: ["일반", "상단"] },
   orientation: { label: "표시 방향", type: "select", options: ["가로형", "세로형"] },
@@ -31,7 +31,6 @@ export const reviewFields = {
   signHeightM: { label: "간판 전체 높이 (m)", type: "number" },
   rooftopDistanceM: { label: "옥상간판 간 수평거리 (m)", type: "number" },
   buildingWidthM: { label: "건물 가로폭 (m)", type: "number" },
-  businessWidthM: { label: "업소 가로폭 (m)", type: "number" },
   protrusionM: { label: "돌출폭 (m)", type: "number" },
   windowObstruction: { label: "창문 차폐", type: "select", options: ["차폐 없음", "차폐 있음", "확인필요"] },
   depthM: { label: "두께 (m)", type: "number" },
@@ -56,7 +55,7 @@ export const reviewFields = {
 
 export type ReviewFieldKey = keyof typeof reviewFields;
 export type ReviewValues = Partial<Record<ReviewFieldKey, string>>;
-type ReviewCheck = { appliedValue: string; status: ReviewStatus; evidence: string };
+type ReviewCheck = { appliedValue: string; status: ReviewStatus };
 export type ReviewDraft = { fields: ReviewValues; checks: Record<string, ReviewCheck> };
 
 const numberFields = ["permitNumberLabel", "permitOrReportNo", "periodBeforeFrom", "periodBeforeTo"] as const;
@@ -71,8 +70,8 @@ const additionalFields: Record<ReviewTemplateId, readonly ReviewFieldKey[]> = {
   T04: projectingFields,
   T05: topWallFields,
   T06: ["boundaryDistanceM", "walkwayObstruction", "signHeightM", "faceAreaM2", "totalAreaM2"],
-  T07: [...wallFields, "businessWidthM"],
-  T08: [...renewalFields, ...wallFields, "businessWidthM", "orientation"],
+  T07: wallFields,
+  T08: [...renewalFields, ...wallFields, "orientation"],
   T09: [...renewalFields, ...projectingFields],
 };
 
@@ -83,8 +82,12 @@ export function getReviewFieldKeys(templateId: ReviewTemplateId | null): ReviewF
   return [...commonFields, ...(templateId ? additionalFields[templateId] : []), "reviewOpinion", "reviewer"];
 }
 
-export function getReviewChecks(templateId: ReviewTemplateId) {
-  return manifest.templates[templateId].checks;
+export function getReviewChecks(templateId: ReviewTemplateId, fields?: ReviewValues) {
+  const checks = manifest.templates[templateId].checks;
+  if (templateId !== "T08" || fields?.wallPlacement !== "상단") return checks;
+  return checks.map((check) => check.key === "row6"
+    ? { ...check, standardText: "○ 설치 위치와 표시 방향에 해당하는 상단간판 규격 기준 확인" }
+    : check);
 }
 
 export function supportsPermitReview(kind: string, category: string): boolean {
@@ -156,7 +159,40 @@ function isDate(value: string): boolean {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-const wholeNumberFields: readonly ReviewFieldKey[] = ["quantity", "floor", "buildingFloors"];
+export function calculateRenewalPeriods(start: string): Record<"periodBeforeTo" | "periodAfterFrom" | "periodAfterTo", string> {
+  const empty = { periodBeforeTo: "", periodAfterFrom: "", periodAfterTo: "" };
+  if (!isDate(start)) return empty;
+
+  const renewalStart = new Date(`${start}T00:00:00Z`);
+  // A February 29 anniversary falls on March 1 in a non-leap year.
+  renewalStart.setUTCFullYear(renewalStart.getUTCFullYear() + 3);
+  const priorEnd = new Date(renewalStart);
+  priorEnd.setUTCDate(priorEnd.getUTCDate() - 1);
+  const renewalEnd = new Date(renewalStart);
+  renewalEnd.setUTCFullYear(renewalEnd.getUTCFullYear() + 3);
+  renewalEnd.setUTCDate(renewalEnd.getUTCDate() - 1);
+  if (renewalEnd.getUTCFullYear() > 9999) return empty;
+
+  return {
+    periodBeforeTo: priorEnd.toISOString().slice(0, 10),
+    periodAfterFrom: renewalStart.toISOString().slice(0, 10),
+    periodAfterTo: renewalEnd.toISOString().slice(0, 10),
+  };
+}
+
+export function completeRenewalPeriods(fields: ReviewValues): ReviewValues {
+  if (!fields.periodBeforeFrom || (fields.periodBeforeTo && fields.periodAfterFrom && fields.periodAfterTo)) return fields;
+  const dates = calculateRenewalPeriods(fields.periodBeforeFrom);
+  if (!dates.periodBeforeTo) return fields;
+  return {
+    ...fields,
+    periodBeforeTo: fields.periodBeforeTo || dates.periodBeforeTo,
+    periodAfterFrom: fields.periodAfterFrom || dates.periodAfterFrom,
+    periodAfterTo: fields.periodAfterTo || dates.periodAfterTo,
+  };
+}
+
+const wholeNumberFields: readonly ReviewFieldKey[] = ["quantity", "buildingFloors"];
 const invalidXmlText = /[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u;
 
 export function normalizeReviewDraft(value: unknown, kind: string, category: string):
@@ -167,8 +203,9 @@ export function normalizeReviewDraft(value: unknown, kind: string, category: str
   const inputChecks = object(draft?.checks);
   if (!inputFields || !inputChecks) return { error: "검토서 입력 형식이 올바르지 않습니다." };
 
-  const fields: ReviewValues = {};
+  let fields: ReviewValues = {};
   for (const key of Object.keys(inputFields)) {
+    if (key === "businessWidthM") continue; // Older drafts may still contain this field.
     if (!Object.hasOwn(reviewFields, key)) return { error: "알 수 없는 검토서 입력 항목입니다." };
     const fieldKey = key as ReviewFieldKey;
     const field: ReviewField = reviewFields[fieldKey];
@@ -190,6 +227,8 @@ export function normalizeReviewDraft(value: unknown, kind: string, category: str
     fields[fieldKey] = text;
   }
 
+  if (category === "연장") fields = completeRenewalPeriods(fields);
+
   const before = fields.periodBeforeFrom && fields.periodBeforeTo && fields.periodBeforeFrom > fields.periodBeforeTo;
   const after = fields.periodAfterFrom && fields.periodAfterTo && fields.periodAfterFrom > fields.periodAfterTo;
   if (before || after) return { error: "표시기간 종료일은 시작일과 같거나 늦어야 합니다." };
@@ -201,12 +240,11 @@ export function normalizeReviewDraft(value: unknown, kind: string, category: str
     if (!checkKeys.has(key)) return { error: "선택한 서식의 점검 항목을 다시 확인하세요." };
     const check = object(value);
     const status = reviewStatuses.find((candidate) => candidate === check?.status);
-    if (!status || typeof check?.appliedValue !== "string" || typeof check.evidence !== "string" ||
-      check.appliedValue.length > 2000 || check.evidence.length > 1000 ||
-      invalidXmlText.test(check.appliedValue) || invalidXmlText.test(check.evidence)) {
-      return { error: "점검표의 신청내용, 판정 또는 근거를 확인하세요." };
+    if (!status || typeof check?.appliedValue !== "string" ||
+      check.appliedValue.length > 2000 || invalidXmlText.test(check.appliedValue)) {
+      return { error: "점검표의 신청내용이나 판정을 확인하세요." };
     }
-    checks[key] = { appliedValue: check.appliedValue.trim(), status, evidence: check.evidence.trim() };
+    checks[key] = { appliedValue: check.appliedValue.trim(), status };
   }
   return { draft: { fields, checks }, templateId };
 }
@@ -235,7 +273,7 @@ export function getSuggestedCheckValue(templateId: ReviewTemplateId, key: string
   const join = (...values: (string | undefined)[]) => values.filter(Boolean).join("\n");
   const specification = fields.specification;
   const quantity = metric("", fields.quantity, "개").trimStart();
-  const floor = metric("", fields.floor, "층").trimStart();
+  const floor = fields.floor && /^\d+$/.test(fields.floor) ? `${fields.floor}층` : fields.floor;
   const protrusion = metric("돌출폭", fields.protrusionM);
   const lighting = fields.lighting;
   const safety = join(fields.safetyResult, fields.safetyDate);
@@ -261,8 +299,9 @@ export function getSuggestedCheckValue(templateId: ReviewTemplateId, key: string
         fields.walkwayObstruction, lighting];
       break;
     default: {
-      const wallDimensions = join(specification, metric("건물 가로폭", fields.buildingWidthM), metric("업소 가로폭", fields.businessWidthM));
-      values = [fields.landUseZone, fields.adOwner, floor, fields.signShape, quantity, wallDimensions,
+      const location = templateId === "T08" && fields.wallPlacement === "상단" ? floor || "건물 상단" : floor;
+      const wallDimensions = join(specification, metric("건물 가로폭", fields.buildingWidthM));
+      values = [fields.landUseZone, fields.adOwner, location, fields.signShape, quantity, wallDimensions,
         protrusion, lighting, fields.windowObstruction, safety];
       if (templateId === "T07") values.splice(6, 0, "");
     }

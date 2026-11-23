@@ -54,7 +54,7 @@ async function verify() {
       "--noCheck", "--module", "commonjs", "--target", "es2022", "--resolveJsonModule", "--esModuleInterop",
       "--rootDir", ".", "--outDir", temporary, "src/lib/permit-review-hwpx.ts",
     ], { cwd: webDirectory, stdio: "inherit" });
-    const { getReviewDownloadError, normalizeReviewDraft, selectReviewTemplate } =
+    const { calculateRenewalPeriods, getReviewDownloadError, getReviewFieldKeys, getSuggestedCheckValue, normalizeReviewDraft, selectReviewTemplate } =
       (await import(pathToFileURL(path.join(temporary, "src/lib/permit-review.js")))).default;
     const { generatePermitReviewHwpx } =
       (await import(pathToFileURL(path.join(temporary, "src/lib/permit-review-hwpx.js")))).default;
@@ -66,17 +66,32 @@ async function verify() {
     assert.ok(normalizeReviewDraft({ fields: { safetyDate: "2031-02-29" }, checks: {} }, "돌출간판", "연장").error);
     assert.ok(normalizeReviewDraft({ fields: { periodBeforeFrom: "2031-01-01", periodBeforeTo: "2030-01-01" }, checks: {} }, "돌출간판", "연장").error);
     assert.ok(normalizeReviewDraft({ fields: {}, checks: { row999: { status: "적합" } } }, "입간판", "신규").error);
+    assert.deepEqual(calculateRenewalPeriods("2023-11-17"), {
+      periodBeforeTo: "2026-11-16", periodAfterFrom: "2026-11-17", periodAfterTo: "2029-11-16",
+    });
+    assert.deepEqual(calculateRenewalPeriods("2024-02-29"), {
+      periodBeforeTo: "2027-02-28", periodAfterFrom: "2027-03-01", periodAfterTo: "2030-02-28",
+    });
+    assert.deepEqual(calculateRenewalPeriods("2023-02-29"), {
+      periodBeforeTo: "", periodAfterFrom: "", periodAfterTo: "",
+    });
+    assert.equal(getSuggestedCheckValue("T08", "row3", { floor: "7" }), "7층");
+    assert.equal(getSuggestedCheckValue("T08", "row3", { floor: "지상 7층" }), "지상 7층");
+    assert.equal(getSuggestedCheckValue("T08", "row3", { floor: "옥상", wallPlacement: "상단" }), "옥상");
+    assert.ok(!Object.keys(fixtures).some((templateId) => getReviewFieldKeys(templateId).includes("businessWidthM")));
 
     for (const [caseIndex, [templateId, [kind, category, selectorFields]]] of Object.entries(fixtures).entries()) {
       const checks = {
         row1: { appliedValue: "테스트 신청", status: "적합", evidence: "검증 근거" },
-        row2: { appliedValue: "", status: "부적합", evidence: "" },
-        row3: { appliedValue: "", status: "해당없음", evidence: "" },
+        row2: { appliedValue: "", status: "부적합" },
+        row3: { appliedValue: "", status: "해당없음" },
       };
-      const normalized = normalizeReviewDraft({ fields: { ...draftFields, ...selectorFields }, checks }, kind, category);
+      const normalized = normalizeReviewDraft({ fields: { ...draftFields, ...selectorFields, businessWidthM: "99" }, checks }, kind, category);
       assert.equal(normalized.error, undefined);
       assert.equal(normalized.templateId, templateId);
       assert.equal(getReviewDownloadError(templateId, normalized.draft.fields), null);
+      assert.equal(normalized.draft.fields.businessWidthM, undefined);
+      assert.deepEqual(normalized.draft.checks.row1, { appliedValue: "테스트 신청", status: "적합" });
 
       const asset = manifest.templates[templateId];
       const rawTemplate = await fs.readFile(path.join(webDirectory, "templates", "review", asset.file));
@@ -97,9 +112,10 @@ async function verify() {
         [1252152058 + 4 * caseIndex, 1252152059 + 4 * caseIndex]);
       assert.equal((xml.match(/<hp:secPr\b/g) ?? []).length, 1);
       assert.doesNotMatch(xml, /\{\{REVIEW:/);
-      for (const value of [">적합<", ">부적합<", ">확인필요<", ">해당없음<", "작성자 검증 작성자", "검증 근거", "검증&amp;사진.png", "새 표시 &amp; &lt;한글&gt;", "첫 문장 &amp; &lt;검토&gt;<hp:lineBreak/>둘째 문장"]) {
+      for (const value of [">적합<", ">부적합<", ">확인필요<", ">해당없음<", "작성자 검증 작성자", "검증&amp;사진.png", "새 표시 &amp; &lt;한글&gt;", "첫 문장 &amp; &lt;검토&gt;<hp:lineBreak/>둘째 문장"]) {
         assert.ok(xml.includes(value), `${templateId} missing ${value}`);
       }
+      assert.doesNotMatch(xml, /검증 근거|업소 가로폭 99m/);
       if (templateId === "T01") assert.match(xml, /이전 표시/);
       if (templateId === "T07") {
         assert.match(xml, /5\.6 × 7\.8<hp:lineBreak\/>9\.1 × 2\.3/);
@@ -112,9 +128,28 @@ async function verify() {
         }
       }
       if (templateId === "T08" || templateId === "T09") {
-        assert.match(xml, /2030-01-01 ~ 2031-12-31/);
-        assert.match(xml, /2032-01-01 ~ 2033-12-31/);
+        assert.match(xml, /2030\.01\.01 ~ 2031\.12\.31/);
+        assert.match(xml, /2032\.01\.01 ~ 2033\.12\.31/);
         assert.match(xml, /2032-01-31/);
+      }
+
+      if (templateId === "T08") {
+        assert.match(xml, /가로 업소폭 80%/);
+        const { periodBeforeTo, periodAfterFrom, periodAfterTo, ...baseFields } = normalized.draft.fields;
+        assert.ok(periodBeforeTo && periodAfterFrom && periodAfterTo);
+        const top = normalizeReviewDraft({
+          fields: { ...baseFields, wallPlacement: "상단", floor: "옥상", periodBeforeFrom: "2023-11-17" },
+          checks: {},
+        }, kind, category);
+        assert.equal(top.templateId, templateId);
+        const topPackage = await JSZip.loadAsync(await generatePermitReviewHwpx(top.templateId, top.draft, []));
+        const topXml = await topPackage.file(sectionFile).async("string");
+        assert.match(topXml, /벽면이용 상단간판 표시기간 연장/);
+        assert.match(topXml, /상단간판 규격 기준 확인/);
+        assert.doesNotMatch(topXml, /가로 업소폭 80%/);
+        assert.match(topXml, />옥상</);
+        assert.match(topXml, /2023\.11\.17 ~ 2026\.11\.16/);
+        assert.match(topXml, /2026\.11\.17 ~ 2029\.11\.16/);
       }
       console.log(`${templateId} structure and values OK`);
     }

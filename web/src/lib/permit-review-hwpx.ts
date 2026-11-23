@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import manifest from "../../templates/review/manifest.json";
-import { getReviewChecks, getSuggestedCheckValue, type ReviewDraft, type ReviewTemplateId } from "./permit-review";
+import { getReviewChecks, getSuggestedCheckValue, type ReviewDraft, type ReviewTemplateId, type ReviewValues } from "./permit-review";
 
 const templateDirectory = path.join(process.cwd(), "templates", "review");
 const tokenPattern = /\{\{REVIEW:([A-Za-z][A-Za-z0-9]*)\}\}/g;
@@ -15,7 +15,7 @@ function xmlText(value: string): string {
     .replace(/\t/g, "    ");
 }
 
-function documentSignType(templateId: ReviewTemplateId, orientation: string | undefined): string {
+function documentSignType(templateId: ReviewTemplateId, { wallPlacement, orientation }: ReviewValues): string {
   switch (templateId) {
     case "T01": return "옥상간판";
     case "T02":
@@ -25,7 +25,10 @@ function documentSignType(templateId: ReviewTemplateId, orientation: string | un
     case "T09": return "돌출간판";
     case "T06": return "입간판";
     case "T07": return "벽면이용간판";
-    case "T08": return orientation ? `벽면이용간판 (${orientation})` : "벽면이용간판";
+    case "T08": {
+      const kind = wallPlacement === "상단" ? "벽면이용 상단간판" : "벽면이용간판";
+      return orientation ? `${kind} (${orientation})` : kind;
+    }
   }
 }
 
@@ -45,7 +48,10 @@ function buildReplacements(templateId: ReviewTemplateId, draft: ReviewDraft, att
   const periodBefore = period(fields.periodBeforeFrom, fields.periodBeforeTo);
   const safetyInspection = [fields.safetyResult, fields.safetyDate].filter(Boolean).join(" · ");
   const replacements: Record<string, string> = {
-    signType: documentSignType(templateId, fields.orientation),
+    signType: documentSignType(templateId, fields),
+    wallRenewalTitle: fields.wallPlacement === "상단"
+      ? "검   토   서(벽면이용 상단간판 표시기간 연장)"
+      : "검   토   서(벽면이용간판)",
     applicant: fields.applicant ?? "",
     installationAddress: fields.installationAddress ?? "",
     displayText: fields.displayText ?? "",
@@ -58,26 +64,26 @@ function buildReplacements(templateId: ReviewTemplateId, draft: ReviewDraft, att
     previousDisplayText: fields.previousDisplayText ?? "",
     currentPeriod: periodBefore,
     applicantDisplayText: [fields.applicant, fields.displayText].filter(Boolean).join(" / "),
-    periodBefore,
-    periodAfter: period(fields.periodAfterFrom, fields.periodAfterTo),
+    periodBefore: periodBefore.replaceAll("-", "."),
+    periodAfter: period(fields.periodAfterFrom, fields.periodAfterTo).replaceAll("-", "."),
     reviewOpinion: fields.reviewOpinion ?? "",
     reviewer: fields.reviewer ? `작성자 ${fields.reviewer}` : "작성자",
     attachments: attachments.length ? attachments.map((name, index) => `${index + 1}. ${name}`).join("\n") : "없음",
     safetyStandard: `○ 안전점검 ${safetyInspection || "확인필요"}`,
   };
 
-  for (const { key } of getReviewChecks(templateId)) {
+  for (const { key, standardText } of getReviewChecks(templateId, fields)) {
     const check = checks[key];
     const appliedValue = check?.appliedValue || getSuggestedCheckValue(templateId, key, fields);
-    const evidence = check?.evidence ? `근거 ${check.evidence}` : "";
+    if (templateId === "T08" && key === "row6") replacements.wallRenewalSizeStandard = standardText;
     if (templateId === "T07" && key === "row6") {
       const [firstValue, otherValues] = check?.appliedValue
         ? splitLines(check.appliedValue)
-        : [[firstSpecification, fields.businessWidthM && `업소 가로폭 ${fields.businessWidthM}m`].filter(Boolean).join("\n"), otherSpecifications];
-      replacements[`${key}Value`] = [firstValue, evidence].filter(Boolean).join("\n");
+        : [firstSpecification, otherSpecifications];
+      replacements[`${key}Value`] = firstValue;
       replacements[`${key}Value2`] = otherValues;
     } else {
-      replacements[`${key}Value`] = [appliedValue, evidence].filter(Boolean).join("\n");
+      replacements[`${key}Value`] = appliedValue;
     }
     replacements[`${key}Status`] = check?.status ?? "확인필요";
   }
