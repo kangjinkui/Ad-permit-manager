@@ -7,6 +7,7 @@ const baseNavItems = [
   { href: "/permits", label: "허가/신고 목록" },
   { href: "/permits/new", label: "신규 등록" },
   { href: "/fees", label: "수수료 계산기" },
+  { href: "/notice-messages", label: "민원 안내 문자" },
   { href: "/deliberation", label: "소심의 의결서" },
 ];
 

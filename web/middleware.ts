@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { isServiceUnavailableError } from "./src/lib/auth-errors";
 import { hasSupabaseEnv } from "./src/lib/env";
 
-const staffProtectedPrefixes = ["/dashboard", "/permits", "/fees"];
+const staffProtectedPrefixes = ["/dashboard", "/permits", "/fees", "/notice-messages"];
 const adminProtectedPrefixes = ["/admin"];
 const authPrefixes = ["/login", "/register"];
 
@@ -125,6 +125,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/fees/:path*",
+    "/notice-messages/:path*",
     "/permits/:path*",
     "/admin/:path*",
     "/login",
