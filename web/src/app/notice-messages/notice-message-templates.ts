@@ -1,6 +1,9 @@
 export const formsUrl =
   "https://search.gangnam.go.kr/search.jsp?kwd=%EC%98%A5%EC%99%B8%EA%B4%91%EA%B3%A0%EB%AC%BC&category=BBS_CIVIL&reSrchFlag=false&pageNum=1&pageSize=5&detailSearch=false&srchFd=all&srchFdDate=regdate&sort=r&date=all&startDate=&endDate=&webfields=null&detailSearchDateFlag=&preKwd=%EC%98%A5%EC%99%B8%EA%B4%91%EA%B3%A0%EB%AC%BC";
 
+const formsLink = `강남구청 서식 모음 및 설치가이드 바로가기
+${formsUrl}`;
+
 export const noticeMessageTemplates = [
   {
     id: "wall",
@@ -25,6 +28,7 @@ export const noticeMessageTemplates = [
 8. 옥외광고업 등록필증 사본
 
 ※ 신청서 및 관련 서식, 「옥외광고물 설치가이드 2026」는 강남구청 홈페이지 통합검색에서 ‘옥외광고물’을 검색한 뒤 민원서식에서 확인하실 수 있습니다.
+${formsLink}
 
 구비서류와 표시기준은 간판의 실제 형태·위치 및 해당 지역 기준에 따라 달라질 수 있으니 접수 전 담당부서에 확인 바랍니다. 감사합니다.`,
   },
@@ -51,6 +55,7 @@ export const noticeMessageTemplates = [
 8. 옥외광고업 등록필증 사본
 
 ※ 신청서 및 관련 서식, 「옥외광고물 설치가이드 2026」는 강남구청 홈페이지 통합검색에서 ‘옥외광고물’을 검색한 뒤 민원서식에서 확인하실 수 있습니다.
+${formsLink}
 
 설치 장소에 따라 별도 지역 기준이 적용될 수 있으니 위치와 도면을 준비해 사전 확인 바랍니다. 감사합니다.`,
   },
@@ -75,6 +80,7 @@ export const noticeMessageTemplates = [
 6. 옥외광고업 등록필증 사본(업체 시공 등 해당하는 경우)
 
 ※ 신청서와 관련 서식은 강남구청 홈페이지 통합검색에서 ‘옥외광고물’을 검색한 뒤 민원서식에서 확인하실 수 있습니다. 설치기준은 같은 곳에 게시된 「옥외광고물 설치가이드 2026」를 확인해 주세요.
+${formsLink}
 
 ※ 입간판의 신고대상 여부와 정확한 구비서류는 실제 규격·설치 장소 및 현행 기준에 따라 달라질 수 있으니 접수 전 담당부서에 확인 바랍니다. 감사합니다.`,
   },
@@ -101,6 +107,7 @@ export const noticeMessageTemplates = [
 8. 옥외광고업 등록필증 사본
 
 ※ 신청서 및 관련 서식, 「옥외광고물 설치가이드 2026」는 강남구청 홈페이지 통합검색에서 ‘옥외광고물’을 검색한 뒤 민원서식에서 확인하실 수 있습니다.
+${formsLink}
 
 지주이용간판은 대지 경계와 설치 위치, 지역별 기준 확인이 중요하므로 위치도와 설계도를 준비해 접수 전 담당부서에 문의 바랍니다. 감사합니다.`,
   },
@@ -127,6 +134,7 @@ export const noticeMessageTemplates = [
 8. 옥외광고업 등록필증 사본
 
 ※ 신청서와 관련 서식, 「옥외광고물 설치가이드 2026」는 강남구청 홈페이지 통합검색에서 ‘옥외광고물’을 검색한 뒤 민원서식에서 확인하실 수 있습니다.
+${formsLink}
 
 옥상간판은 건물과 설치 형태별 검토가 필요하므로 신청 전 위치도·설계도·전경사진을 준비해 담당부서에 문의 바랍니다. 감사합니다.`,
   },
