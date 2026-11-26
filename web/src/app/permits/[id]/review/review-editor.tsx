@@ -16,6 +16,7 @@ import {
   type ReviewStatus,
   type ReviewTemplateId,
 } from "@/lib/permit-review";
+import { getPermitReviewFileNames } from "@/lib/permit-review-filename";
 
 type Attachment = {
   id: string;
@@ -37,6 +38,13 @@ type ReviewEditorProps = {
 type Notice = {
   tone: "success" | "error" | "info";
   text: string;
+};
+
+type DirectoryPickerWindow = Window & {
+  showDirectoryPicker?: (options: {
+    id: string;
+    mode: "readwrite";
+  }) => Promise<FileSystemDirectoryHandle>;
 };
 
 type FieldDefinition = {
@@ -129,17 +137,42 @@ async function readApiError(response: Response): Promise<string> {
   return apiMessage ?? "요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.";
 }
 
-function downloadName(response: Response, advertiser: string): string {
-  const disposition = response.headers.get("content-disposition") ?? "";
-  const utf8Name = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
-  if (utf8Name) {
-    try {
-      return decodeURIComponent(utf8Name);
-    } catch {
-      return utf8Name;
+async function saveReviewFile(
+  directory: FileSystemDirectoryHandle,
+  fileName: string,
+  blob: Blob,
+): Promise<boolean> {
+  let handle: FileSystemFileHandle;
+  try {
+    handle = await directory.getFileHandle(fileName);
+    if (!window.confirm(`같은 이름의 파일이 있습니다. 기존 파일을 교체할까요?\n\n${fileName}`)) {
+      return false;
     }
+  } catch (error) {
+    if (!(error instanceof DOMException && error.name === "NotFoundError")) throw error;
+    handle = await directory.getFileHandle(fileName, { create: true });
   }
-  return `옥외광고물_검토서_${advertiser}.hwpx`;
+
+  const stream = await handle.createWritable();
+  try {
+    await stream.write(blob);
+    await stream.close();
+  } catch (error) {
+    await stream.abort().catch(() => {});
+    throw error;
+  }
+  return true;
+}
+
+function downloadReviewFile(blob: Blob, fileName: string) {
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1_000);
 }
 
 function FieldControl({
@@ -233,12 +266,19 @@ export function ReviewEditor({
   const [dirty, setDirty] = useState(sanitizedInitial.changed);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [saveDirectory, setSaveDirectory] = useState<FileSystemDirectoryHandle | null>(null);
+  const [choosingDirectory, setChoosingDirectory] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const busy = saving || generating || uploading || deletingAttachmentId !== null;
+  const busy = saving || generating || choosingDirectory || uploading || deletingAttachmentId !== null;
+  const { directoryName, fileName } = getPermitReviewFileNames(
+    permitKind,
+    draft.fields.applicant?.trim() || advertiser,
+  );
+  const savePath = [saveDirectory?.name, directoryName, fileName].filter(Boolean).join(" / ");
 
   const selection = useMemo(
     () => selectReviewTemplate(permitKind, permitCategory, draft.fields),
@@ -273,6 +313,7 @@ export function ReviewEditor({
     (upperWallSizeBand !== null &&
       (draft.fields.orientation === "가로형" || draft.fields.orientation === "세로형"));
   const displayedTemplateId = templateId ?? (dirty ? null : initialTemplateId);
+  const canGenerate = Boolean(templateId) && hasUpperWallCriteria;
 
   function updateField(fieldKey: ReviewFieldKey, value: string) {
     setDraft((current) => {
@@ -380,10 +421,44 @@ export function ReviewEditor({
     }
   }
 
-  async function handleGenerate() {
+  async function chooseSaveDirectory() {
+    setNotice(null);
+    const browser = window as DirectoryPickerWindow;
+    if (!browser.showDirectoryPicker) {
+      setNotice({
+        tone: "info",
+        text: "이 환경에서는 폴더를 선택할 수 없습니다. 일반 다운로드를 이용하거나 Chrome 또는 Edge에서 HTTPS 주소로 접속하세요.",
+      });
+      return null;
+    }
+
+    setChoosingDirectory(true);
+    try {
+      const directory = await browser.showDirectoryPicker({ id: "permit-review", mode: "readwrite" });
+      setSaveDirectory(directory);
+      return directory;
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setNotice({
+          tone: "error",
+          text: "저장 폴더를 열 수 없습니다. 쓰기 권한이 있는 다른 폴더를 선택하거나 일반 다운로드를 이용하세요.",
+        });
+      }
+      return null;
+    } finally {
+      setChoosingDirectory(false);
+    }
+  }
+
+  async function handleGenerate(destination: "folder" | "download") {
     setGenerating(true);
     setNotice(null);
     try {
+      // Open the picker while this click still grants user activation.
+      const parentDirectory =
+        destination === "folder" ? saveDirectory ?? await chooseSaveDirectory() : null;
+      if (destination === "folder" && !parentDirectory) return;
+
       const savedVersion = !dirty && version ? version : await saveDraft(false);
       if (!savedVersion) return;
 
@@ -400,17 +475,28 @@ export function ReviewEditor({
         return;
       }
 
-      const blobUrl = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = downloadName(response, advertiser);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1_000);
+      const blob = await response.blob();
+      if (parentDirectory) {
+        try {
+          const advertiserDirectory = await parentDirectory.getDirectoryHandle(directoryName, { create: true });
+          const saved = await saveReviewFile(advertiserDirectory, fileName, blob);
+          setNotice({
+            tone: saved ? "success" : "info",
+            text: saved ? "선택한 폴더에 검토서를 저장했습니다." : "기존 파일 교체를 취소했습니다.",
+          });
+        } catch {
+          setNotice({
+            tone: "error",
+            text: "폴더에 검토서를 저장하지 못했습니다. 쓰기 권한과 파일이 열려 있는지 확인하거나 일반 다운로드를 이용하세요.",
+          });
+        }
+        return;
+      }
+
+      downloadReviewFile(blob, fileName);
       setNotice({
         tone: "success",
-        text: "최신 초안을 저장하고 HWPX 파일을 생성했습니다.",
+        text: "HWPX 파일 다운로드를 시작했습니다.",
       });
     } catch {
       setNotice({
@@ -740,6 +826,34 @@ export function ReviewEditor({
         )}
       </article>
 
+      <article className="panel">
+        <h2 className="text-lg font-semibold text-slate-900">검토서 저장 위치</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          폴더 선택 창에서 경로를 입력하거나 폴더를 찾아 선택하세요. 그 아래에 광고주명 폴더를 만들어 저장합니다.
+        </p>
+        <p className="mt-3 break-all rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-700">
+          {saveDirectory ? savePath : `선택할 폴더 / ${savePath}`}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <button
+            type="button"
+            className="button-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={busy}
+            onClick={chooseSaveDirectory}
+          >
+            {saveDirectory ? "저장 폴더 변경" : "저장 폴더 선택"}
+          </button>
+          <button
+            type="button"
+            className="button-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={busy || !canGenerate}
+            onClick={() => handleGenerate("download")}
+          >
+            일반 다운로드
+          </button>
+        </div>
+      </article>
+
       <article className="panel sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 border-slate-300 shadow-xl">
         <div className="min-w-0 flex-1">
           {notice ? (
@@ -764,10 +878,10 @@ export function ReviewEditor({
           <button
             type="button"
             className="button-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={busy || !templateId || !hasUpperWallCriteria}
-            onClick={handleGenerate}
+            disabled={busy || !canGenerate}
+            onClick={() => handleGenerate("folder")}
           >
-            {generating ? "문서 생성 중…" : "HWPX 다운로드"}
+            {generating ? "문서 생성 중…" : "HWPX 저장"}
           </button>
         </div>
       </article>

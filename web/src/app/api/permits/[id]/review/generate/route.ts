@@ -1,3 +1,4 @@
+import { getPermitReviewFileNames } from "@/lib/permit-review-filename";
 import { generatePermitReviewHwpx } from "@/lib/permit-review-hwpx";
 import { downloadHeaders, getReviewApiPermit, isReviewVersion, reviewConflict, reviewError } from "@/lib/permit-review-http";
 import { getReviewDownloadError, normalizeReviewDraft, reviewTemplateVersion, selectReviewTemplate } from "@/lib/permit-review";
@@ -29,8 +30,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const attachments = permit.category === "내용변경" ? await listReviewAttachments(id) : [];
     const file = await generatePermitReviewHwpx(selected.templateId, normalized.draft, attachments.map(({ name }) => name));
+    const { fileName } = getPermitReviewFileNames(
+      permit.kind,
+      normalized.draft.fields.applicant || permit.advertiser,
+    );
     return new Response(file, {
-      headers: downloadHeaders(`옥외광고물_검토서_${id}.hwpx`, "application/hwp+zip"),
+      headers: downloadHeaders(fileName, "application/hwp+zip"),
     });
   } catch (error) {
     console.error("Review HWPX generation failed", error);
